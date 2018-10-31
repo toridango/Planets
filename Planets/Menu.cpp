@@ -31,7 +31,7 @@ void Menu::run()
 }
 
 
-void Game::processEvents()
+void Menu::processEvents()
 {
 	sf::Event event;
 	while (m_window.pollEvent(event))
@@ -51,7 +51,7 @@ void Game::processEvents()
 	}
 }
 
-void Game::update(sf::Time deltaTime)
+void Menu::update(sf::Time deltaTime)
 {
 	sf::Vector2f movement(0.0f, 0.0f);
 
@@ -70,7 +70,7 @@ void Game::update(sf::Time deltaTime)
 	m_player.move(movement * deltaTime.asSeconds());
 }
 
-void Game::render()
+void Menu::render()
 {
 
 	m_window.clear();

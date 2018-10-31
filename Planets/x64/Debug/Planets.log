@@ -1,0 +1,12 @@
+﻿  Game.cpp
+c:\users\delom\docs\msc cgt\cmp501 ngd\planets\planets\game.cpp(2): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  main.cpp
+  Menu.cpp
+c:\users\delom\docs\msc cgt\cmp501 ngd\planets\planets\menu.cpp(3): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  Player.cpp
+c:\users\delom\docs\msc cgt\cmp501 ngd\planets\planets\player.cpp(2): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  Generating Code...
+Menu.obj : error LNK2005: "private: void __cdecl Game::processEvents(void)" (?processEvents@Game@@AEAAXXZ) already defined in Game.obj
+Menu.obj : error LNK2005: "private: void __cdecl Game::render(void)" (?render@Game@@AEAAXXZ) already defined in Game.obj
+Menu.obj : error LNK2005: "private: void __cdecl Game::update(class sf::Time)" (?update@Game@@AEAAXVTime@sf@@@Z) already defined in Game.obj
+sfml-graphics-d.lib(sfml-graphics-d-2.dll) : fatal error LNK1112: module machine type 'x86' conflicts with target machine type 'x64'
