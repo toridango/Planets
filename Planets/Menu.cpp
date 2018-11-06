@@ -1,18 +1,38 @@
-
-
 #include "Menu.h";
 
 
 
 Menu::Menu()
 	: m_window(sf::VideoMode(1280, 960), "SFML Application")
-	, m_player()
+	, b_host(HOST), b_join(JOIN), b_exit(EXIT)
+	, m_background()
 {
+	if (!m_bg_tex.loadFromFile("Media/eclipse.jpg"))
+	{
+		throw "Image didn't load!";
+	}
 
+	m_background.setTexture(m_bg_tex);
+	//m_background.setPosition(1280.0 / 2.0 - float(m_bg_tex.getSize().x) / 2.0, 960.0 / 2.0 - float(m_bg_tex.getSize().y) / 2.0);
+	m_background.setPosition(-100, -100);
+
+	b_host.setText("Host game");
+	//b_host.setSize(sf::Vector2f(200.0f, 20.0f));
+	b_host.setPosition(sf::Vector2f(50.0f, 350.0f));
+	bArray.push_back(&b_host);
+
+	b_join.setText("Join game");
+	b_join.setPosition(sf::Vector2f(50.0f, 500.0f));
+	bArray.push_back(&b_join);
+
+	b_exit.setText("Exit");
+	b_exit.setPosition(sf::Vector2f(50.0f, 650.0f));
+	bArray.push_back(&b_exit);
 }
 
 void Menu::run()
 {
+	bool clicking = false;
 	sf::Clock clock;
 	sf::Time timeSinceLastUpdate = sf::Time::Zero;
 	sf::Time timePerFrame = sf::seconds(1.0f / 60.0f);
@@ -20,6 +40,26 @@ void Menu::run()
 	{
 		processEvents();
 		timeSinceLastUpdate += clock.restart();
+
+		for (Button* b : bArray)
+		{
+			if (b->isMouseOverlap(sf::Mouse::getPosition(m_window)))
+			{
+				b->highlight(true);
+				if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				{
+					if (!clicking)
+					{
+						clicking = true;
+						b->callback();
+						clicking = false;
+					}
+				}
+			}
+			else
+				b->highlight(false);
+		}
+
 		while (timeSinceLastUpdate > timePerFrame)
 		{
 			timeSinceLastUpdate -= timePerFrame;
@@ -38,12 +78,6 @@ void Menu::processEvents()
 	{
 		switch (event.type)
 		{
-		case sf::Event::KeyPressed:
-			m_player.handlePlayerInput(event.key.code, true);
-			break;
-		case sf::Event::KeyReleased:
-			m_player.handlePlayerInput(event.key.code, false);
-			break;
 		case sf::Event::Closed:
 			m_window.close();
 			break;
@@ -53,28 +87,19 @@ void Menu::processEvents()
 
 void Menu::update(sf::Time deltaTime)
 {
-	sf::Vector2f movement(0.0f, 0.0f);
 
-	if (m_player.isMoving(m_player.UP))
-		movement.y -= m_player.getSpeed();
-
-	if (m_player.isMoving(m_player.DOWN))
-		movement.y += m_player.getSpeed();
-
-	if (m_player.isMoving(m_player.LEFT))
-		movement.x -= m_player.getSpeed();
-
-	if (m_player.isMoving(m_player.RIGHT))
-		movement.x += m_player.getSpeed();
-
-	m_player.move(movement * deltaTime.asSeconds());
 }
 
 void Menu::render()
 {
 
 	m_window.clear();
-	m_window.draw(m_player.getSprite());
+	m_window.draw(m_background);
+	for (Button* b : bArray)
+	{
+		m_window.draw(b->getSprite());
+		m_window.draw(b->getText());
+	}
 	m_window.display();
 }
 

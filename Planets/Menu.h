@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Game.h"
+#include "Button.h"
+
 
 class Menu
 {
@@ -16,6 +18,13 @@ private:
 
 private:
 	sf::RenderWindow m_window;
-	Player m_player;
+
+	std::vector<Button*> bArray;
+	Button b_host;
+	Button b_join;
+	Button b_exit;
+
+	sf::Texture m_bg_tex;
+	sf::Sprite m_background;
 
 };
