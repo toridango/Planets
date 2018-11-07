@@ -10,6 +10,12 @@ Game::Game()
 
 }
 
+Game::Game(BTYPE gt)
+	: Game()
+{
+	type = gt;
+}
+
 void Game::run()
 {
 	sf::Clock clock;

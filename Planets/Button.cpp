@@ -94,28 +94,7 @@ void Button::highlight(bool flag)
 	}
 }
 
-void Button::callback()
+BTYPE Button::getBType()
 {
-	
-	switch (type)
-	{
-	case HOST:
-		std::cout << "Host" << std::endl;
-
-		break;
-	case JOIN:
-		std::cout << "Join" << std::endl;
-		break;
-	case EXIT:
-		std::cout << "Exit" << std::endl;
-		break;
-
-	}
-	
-	long dsgfdg = -100000;
-	while (dsgfdg < 100000)
-	{
-		dsgfdg++;
-		std::cout << "";
-	}
+	return type;
 }

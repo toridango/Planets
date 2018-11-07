@@ -1,21 +1,3 @@
-﻿  Button.cpp
-c:\users\delom\docs\msc cgt\cmp501 ngd\planets\planets\button.cpp(34): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=unsigned int
-          ]
-c:\users\delom\docs\msc cgt\cmp501 ngd\planets\planets\button.cpp(35): warning C4244: 'argument': conversion from 'T' to 'float', possible loss of data
-          with
-          [
-              T=unsigned int
-          ]
-c:\users\delom\docs\msc cgt\cmp501 ngd\planets\planets\button.cpp(80): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
-          with
-          [
-              T=int
-          ]
-          and
-          [
-              T=float
-          ]
+﻿  Menu.cpp
+c:\users\delom\docs\msc cgt\cmp501 ngd\planets\planets\menu.cpp(1): warning C4067: unexpected tokens following preprocessor directive - expected a newline
   Planets.vcxproj -> C:\Users\Delom\Docs\MSc CGT\CMP501 NGD\Planets\Debug\Planets.exe

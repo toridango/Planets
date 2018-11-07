@@ -4,7 +4,7 @@
 
 #include <SFML/Graphics.hpp>
 
-enum BTYPE { HOST, JOIN, EXIT };
+enum BTYPE { BHOST, BJOIN, EXIT, NONE };
 
 class Button
 {
@@ -16,11 +16,11 @@ public:
 	void setSize(sf::Vector2f size);
 	void setPosition(sf::Vector2f pos);
 	void setType(BTYPE);
-	void callback();
 
 
 	sf::Sprite getSprite();
 	sf::Text getText();
+	BTYPE getBType();
 	bool isMouseOverlap(sf::Vector2i mousepos);
 	void highlight(bool flag);
 

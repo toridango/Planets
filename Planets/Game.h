@@ -2,11 +2,14 @@
 #include <SFML/Graphics.hpp>
 
 #include "Player.h"
+#include "Button.h"
+
 
 class Game
 {
 public:
 	Game();
+	Game(BTYPE);
 	void run();
 
 private:
@@ -18,5 +21,6 @@ private:
 private:
 	sf::RenderWindow m_window;
 	Player m_player;
+	BTYPE type;
 
 };

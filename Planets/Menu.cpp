@@ -4,7 +4,7 @@
 
 Menu::Menu()
 	: m_window(sf::VideoMode(1280, 960), "SFML Application")
-	, b_host(HOST), b_join(JOIN), b_exit(EXIT)
+	, b_host(BHOST), b_join(BJOIN), b_exit(EXIT)
 	, m_background()
 {
 	if (!m_bg_tex.loadFromFile("Media/eclipse.jpg"))
@@ -33,11 +33,13 @@ Menu::Menu()
 void Menu::run()
 {
 	bool clicking = false;
+	BTYPE exit = NONE;
 	sf::Clock clock;
 	sf::Time timeSinceLastUpdate = sf::Time::Zero;
 	sf::Time timePerFrame = sf::seconds(1.0f / 60.0f);
 	while (m_window.isOpen())
 	{
+		exit = NONE;
 		processEvents();
 		timeSinceLastUpdate += clock.restart();
 
@@ -51,13 +53,24 @@ void Menu::run()
 					if (!clicking)
 					{
 						clicking = true;
-						b->callback();
+						exit = b->getBType();
 						clicking = false;
 					}
 				}
 			}
 			else
 				b->highlight(false);
+		}
+
+		if(exit == EXIT)
+		{
+			m_window.close();
+		}
+		else if (exit == BHOST || exit == BJOIN)
+		{
+			//m_window.close();
+			Game game(exit);
+			game.run();
 		}
 
 		while (timeSinceLastUpdate > timePerFrame)
