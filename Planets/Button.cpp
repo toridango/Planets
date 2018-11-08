@@ -19,7 +19,8 @@ Button::Button()
 
 	m_sprite.setTexture(m_texture);
 	m_text.setFont(m_font);
-	m_text.setFillColor(sf::Color(61, 202, 226, 255));
+	//m_text.setFillColor(sf::Color(61, 202, 226, 255));
+	m_text.setFillColor(sf::Color(29, 91, 122, 255));
 }
 
 Button::Button(BTYPE b)
