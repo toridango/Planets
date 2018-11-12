@@ -44,4 +44,10 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	}
 }
 
+void SceneNode::drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const
+{
+
+}
+
+
 // TODO: pag61, continue creating types of entities and overwrite drawCurrent with their sprites

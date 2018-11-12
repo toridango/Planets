@@ -8,6 +8,9 @@ Player::Player()
 	: m_sprite()
 {
 
+	TextureHolder textures;
+	textures.load(Textures::PLANETTERRAN, "Media/Textures/PlanetTerran1.png");
+
 	// HARDCODED STUFF -----------------------------
 
 	m_playerSpeed = 100.0f;
@@ -15,10 +18,7 @@ Player::Player()
 
 	// ---------------------------------------------
 
-	if (!m_texture.loadFromFile("Media/Textures/Terran1.png"))
-	{
-		throw "Image didn't load!";
-	}
+	m_texture = textures.get(Textures::PLANETTERRAN);
 	m_sprite.setTexture(m_texture);
 	m_texSize = m_texture.getSize();
 
