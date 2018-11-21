@@ -2,7 +2,78 @@
 
 
 
+Planet::Planet(Planets::Type type, TextureHolder& textures)
+	: m_sprite(textures.get(toTextureID(type)))
+{
+	m_size = sf::Vector2f(50.0, 50.0);
+	sf::Texture tex = textures.get(toTextureID(type));
+	m_sprite.scale(sf::Vector2f(m_size.x / (float)tex.getSize().x, m_size.y / (float)tex.getSize().y));
+
+	sf::FloatRect bounds = m_sprite.getLocalBounds();
+	m_sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+
+	// Initialise physical parameters
+	
+	// angle (degrees)
+	m_angle = 0.0f;
+
+}
+
+
 void Planet::drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	target.draw(m_sprite, states);
+}
+
+Textures::ID Planet::toTextureID(Planets::Type type)
+{
+	switch (type)
+	{
+	case Planets::Terran:
+		return Textures::PLANETTERRAN;
+	case Planets::City:
+		return Textures::PLANETCITY;
+	case Planets::Ice:
+		return Textures::PLANETICE;
+	case Planets::Lava:
+		return Textures::PLANETLAVA;
+	case Planets::Crosshairs:
+		return Textures::CROSSHAIRS;
+	}
+	return Textures::SUN;
+}
+
+void Planet::move(float deltatime)
+{
+	m_angle += deltatime * m_angularSpeed;
+
+	float x = m_orbitRadius * cos(m_angle / PI);
+	float y = m_orbitRadius * sin(m_angle / PI);
+	
+	setPosition(x, y);
+}
+
+
+void Planet::setRadius(float r)
+{
+	// Initialise angular speed
+	// angular speed is proportional to sqrt of mass and inversely proportional to radius^3/2
+	// the gravitational constant is of the order of 10^-11
+	// but since the mass nor the distance are of the order of millions, I'm making up a constant too
+	m_angularSpeed = G * sqrt(MASS / (pow(r, 3)));
+		
+	float x = r * cos(m_angle / PI);
+	float y = r * sin(m_angle / PI);
+	m_orbitRadius = r;
+
+	setPosition(x, y);
+}
+
+void Planet::setAngle(float a)
+{
+	m_angle = a;
+	float x = m_orbitRadius * cos(a / PI);
+	float y = m_orbitRadius * sin(a / PI);
+
+	setPosition(x, y);
 }

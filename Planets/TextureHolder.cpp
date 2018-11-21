@@ -27,4 +27,4 @@ const sf::Texture& TextureHolder::get(Textures::ID id) const
 	return *found->second;
 }
 
-// TODO Generalizing the approach
+

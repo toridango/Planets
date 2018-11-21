@@ -2,10 +2,10 @@
 
 
 
-/*Entity::Entity()
+Entity::Entity()
 {
 
-}*/
+}
 
 void Entity::setVelocity(sf::Vector2f v)
 {

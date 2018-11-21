@@ -6,12 +6,12 @@
 
 #include <SFML/Graphics.hpp>
 
+
 namespace Textures
 {
-	enum ID{SUN, PLANETCITY, PLANETTERRAN, PLANETICE, PLANETLAVA};
-
-
-}
+	enum ID{SUN, PLANETCITY, PLANETTERRAN
+		, PLANETICE, PLANETLAVA, CROSSHAIRS};
+};
 
 class TextureHolder
 {

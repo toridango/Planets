@@ -3,12 +3,13 @@
 #include <SFML/Graphics.hpp>
 
 #include "SceneNode.h"
+#include "TextureHolder.h"
 
 class Entity
 	: public SceneNode
 {
 public:
-	//Entity();
+	Entity();
 
 	void setVelocity(sf::Vector2f v);
 	void setVelocity(float vx, float vy);

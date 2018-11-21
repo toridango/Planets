@@ -4,27 +4,30 @@
 
 
 
-Player::Player()
-	: m_sprite()
+Player::Player(Planets::Type type, TextureHolder& textures)
+	: Planet(type, textures)
 {
 
-	TextureHolder textures;
-	textures.load(Textures::PLANETTERRAN, "Media/Textures/PlanetTerran1.png");
+	/*TextureHolder textures;
+	textures.load(Textures::PLANETTERRAN, "Media/Textures/PlanetTerran1.png");*/
 
 	// HARDCODED STUFF -----------------------------
 
-	m_playerSpeed = 100.0f;
-	m_playerSize = sf::Vector2f(50.0, 50.0);
+	//m_playerSpeed = 100.0f;
+	//m_playerSize = sf::Vector2f(50.0, 50.0);
 
 	// ---------------------------------------------
 
-	m_texture = textures.get(Textures::PLANETTERRAN);
-	m_sprite.setTexture(m_texture);
-	m_texSize = m_texture.getSize();
+	//sf::Texture tex = textures.get(Textures::PLANETTERRAN);
+	//m_sprite.setTexture(m_texture);
+	//m_texSize = tex.getSize();
 
 	//std::cout << texSize.x << " " << texSize.y;
-	m_sprite.scale(sf::Vector2f(m_playerSize.x / (float)m_texSize.x, m_playerSize.y / (float)m_texSize.y));
-	m_sprite.setPosition(100.0f, 100.0f);
+	//m_sprite.scale(sf::Vector2f(m_playerSize.x / (float)m_texSize.x, m_playerSize.y / (float)m_texSize.y));
+	//m_sprite.setPosition(100.0f, 100.0f);
+
+
+
 }
 
 
@@ -40,15 +43,15 @@ void Player::handlePlayerInput(sf::Keyboard::Key key, bool isPressed)
 		m_isMovingRight = isPressed;
 }
 
-void Player::move(sf::Vector2f v)
+/*void Player::move(sf::Vector2f v)
 {
 	m_sprite.move(v);
-}
+}*/
 
-float Player::getSpeed()
+/*float Player::getSpeed()
 {
 	return m_playerSpeed;
-}
+}*/
 
 sf::Sprite Player::getSprite()
 {
@@ -77,4 +80,9 @@ bool Player::isMoving(Player::Dir direction)
 	}
 
 	return isIt;
+}
+
+void Player::drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const
+{
+	target.draw(m_sprite, states);
 }

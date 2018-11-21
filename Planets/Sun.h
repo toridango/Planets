@@ -1,16 +1,20 @@
 #pragma once
 
 #include "Entity.h"
+#include "TextureHolder.h"
 
 
-class Sun
+class Sun // aka root of system
 	: public Entity
 {
 public:
-	explicit Sun();
+	explicit Sun(TextureHolder& textures);
 	virtual void drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const;
+
+
 
 private:
 	sf::Sprite m_sprite;
+	sf::Vector2f m_size;
 
 };
