@@ -2,6 +2,7 @@
 
 
 
+BTYPE Button::lastButton = BTYPE::NONE;
 Button::Button()
 	: m_sprite()
 	, m_font()
@@ -94,6 +95,19 @@ void Button::highlight(bool flag)
 		centreText(m_sprite.getPosition());
 	}
 }
+
+
+void Button::setLastButton()
+{
+	Button::lastButton = type;
+}
+
+BTYPE Button::getLastButton()
+{
+	return Button::lastButton;
+}
+
+
 
 BTYPE Button::getBType()
 {

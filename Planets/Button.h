@@ -23,6 +23,10 @@ public:
 	BTYPE getBType();
 	bool isMouseOverlap(sf::Vector2i mousepos);
 	void highlight(bool flag);
+	void setLastButton();
+	static BTYPE getLastButton();
+	static BTYPE Button::lastButton;
+
 
 private:
 

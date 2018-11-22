@@ -16,23 +16,35 @@ Game::Game()
 	}
 	// TODO: Info text not showing?
 	m_info.setFont(m_font);
-	m_info.setFillColor(sf::Color(0, 0, 0, 255));
+	m_info.setFillColor(sf::Color(255, 255, 255, 255));
 	m_info.setString("");
-	m_info.setPosition(100.0, 500.0);
+	m_info.setPosition(650.0, 150.0);
+	local_ip = sf::IpAddress::getLocalAddress();
+
+	type = Button::getLastButton();
 
 	loadTextures();
 	buildScene();
+
+
+	m_info.setPosition(550.0, 150.0);
+	m_inString = "";
+	if (type == BTYPE::BHOST)
+	{
+		m_info.setString("Waiting for opponent to join...\nYour Ip address: " + local_ip.toString());
+	}
+	else
+	{
+		m_info.setString("Enter host IP address\n");
+	}
 }
 
-Game::Game(BTYPE gt)
-	: Game()
-{
-	type = gt;
-}
 
 void Game::loadTextures()
 {
 	m_info.setString("Loading textures...");
+	m_window.draw(m_info);
+	m_window.display();
 
 	m_textures.load(Textures::SUN, "Media/Textures/sun.png");
 	m_textures.load(Textures::PLANETTERRAN, "Media/Textures/PlanetTerran1.png");
@@ -41,13 +53,29 @@ void Game::loadTextures()
 	m_textures.load(Textures::PLANETLAVA, "Media/Textures/PlanetLava1.png");
 	m_textures.load(Textures::CROSSHAIRS, "Media/Textures/crosshairs.png");
 
-	m_info.setString("");
+
 }
 
 void Game::buildScene()
 {
 
+
 	sf::Texture& texture = m_textures.get(Textures::SUN);
+	insideOrbitRadius = 250.f;
+	outsideOrbitRadius = 450.f;
+	float playerRadius;
+	float oppoRadius;
+
+	if (type == BTYPE::BHOST)
+	{
+		playerRadius = insideOrbitRadius;
+		oppoRadius = outsideOrbitRadius;
+	}
+	else
+	{
+		oppoRadius = insideOrbitRadius;
+		playerRadius = outsideOrbitRadius;
+	}
 
 	std::unique_ptr<Sun> sun(new Sun(m_textures));
 	m_sun = sun.get();
@@ -58,22 +86,22 @@ void Game::buildScene()
 	std::unique_ptr<Player> terra(new Player(Planets::Terran, m_textures));
 	m_player = terra.get();
 	// Pos with respect to parent (sun)
-	m_player->setRadius(250.0); // (150.0, 150.0);
+	m_player->setRadius(playerRadius); // (150.0, 150.0);
 	m_sun->attachChild(std::move(terra));
-	
+
 	std::unique_ptr<Planet> crosshairs(new Planet(Planets::Crosshairs, m_textures));
 	m_crossH = crosshairs.get();
 	// Pos with respect to parent (player)
 	m_crossH->setRadius(50.0);
 	m_player->attachChild(std::move(crosshairs));
 
-	std::unique_ptr<Planet> oppo(new Planet(Planets::Ice, m_textures));
+	std::unique_ptr<Planet> oppo(new Planet(Planets::Lava, m_textures));
 	m_opponent = oppo.get();
 	// Pos with respect to parent (sun)
-	m_opponent->setRadius(450.0);
+	m_opponent->setRadius(oppoRadius);
 	m_sun->attachChild(std::move(oppo));
 
-	
+
 	/* Master TODO:
 	*	- Add lasers
 	*		AND/OR
@@ -123,12 +151,32 @@ void Game::processEvents()
 		case sf::Event::Closed:
 			m_window.close();
 			break;
+		case sf::Event::TextEntered:
+			if (type == BJOIN)
+			{
+				//if (event.text.unicode == sf::Keyboard::BackSpace && m_inString.size() != 0)
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::BackSpace) && m_inString.size() != 0)
+				{
+					m_inString.pop_back();
+				}
+				else if (((event.text.unicode < 58 && event.text.unicode > 47) || event.text.unicode == 46) && m_inString.size() + 1 <= 15)
+				{
+					m_inString.push_back((char)event.text.unicode);
+				}
+				char i = static_cast<char>(event.text.unicode);
+				i = static_cast<char>(event.text.unicode);
+			}
 		}
 	}
 }
 
 void Game::update(sf::Time deltaTime)
 {
+
+
+	m_info.setString("Enter host IP address\n" + m_inString);
+
+
 	sf::Vector2f movement(0.0f, 0.0f);
 	sf::Vector2i mousePos = sf::Mouse::getPosition(m_window);
 
@@ -144,8 +192,8 @@ void Game::update(sf::Time deltaTime)
 	if (m_player->isMoving(m_player->RIGHT))
 		movement.x += m_player->getSpeed();*/
 
-	float y = (float) mousePos.y - m_player->getWorldPosition().y;
-	float x = (float) mousePos.x - m_player->getWorldPosition().x;
+	float y = (float)mousePos.y - m_player->getWorldPosition().y;
+	float x = (float)mousePos.x - m_player->getWorldPosition().x;
 
 	float a = atan2(y, x);
 
@@ -160,6 +208,7 @@ void Game::render()
 	m_window.clear();
 	//m_window.draw(m_player.getSprite());
 	m_window.draw(m_sceneGraph);
+	m_window.draw(m_info);
 	m_window.display();
 }
 

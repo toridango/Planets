@@ -54,6 +54,7 @@ void Menu::run()
 					{
 						clicking = true;
 						exit = b->getBType();
+						b->setLastButton();
 						clicking = false;
 					}
 				}
@@ -69,7 +70,7 @@ void Menu::run()
 		else if (exit == BHOST || exit == BJOIN)
 		{
 			//m_window.close();
-			Game game(exit);
+			Game game;
 			game.run();
 		}
 
