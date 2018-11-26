@@ -8,12 +8,12 @@ Button::Button()
 	, m_font()
 	, m_text()
 {
-	if (!m_font.loadFromFile("Media/Fonts/bahnschrift.ttf"))
+	if (!m_font.loadFromFile("../Planets/Media/Fonts/bahnschrift.ttf"))
 	{
 		throw "Font didn't load!";
 	}
 
-	if (!m_texture.loadFromFile("Media/button.png"))
+	if (!m_texture.loadFromFile("../Planets/Media/button.png"))
 	{
 		throw "Image didn't load!";
 	}

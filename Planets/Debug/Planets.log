@@ -1,5 +1,5 @@
 ﻿  Game.cpp
 c:\users\delom\docs\msc cgt\cmp501 ngd\planets\planets\game.cpp(2): warning C4067: unexpected tokens following preprocessor directive - expected a newline
 c:\users\delom\docs\msc cgt\cmp501 ngd\planets\planets\game.cpp(24): warning C4129: '.': unrecognized character escape sequence
-c:\users\delom\docs\msc cgt\cmp501 ngd\planets\planets\game.cpp(262): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+c:\users\delom\docs\msc cgt\cmp501 ngd\planets\planets\game.cpp(312): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   Planets.vcxproj -> C:\Users\Delom\Docs\MSc CGT\CMP501 NGD\Planets\Debug\Planets.exe

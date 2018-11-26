@@ -6,7 +6,8 @@ void TextureHolder::load(Textures::ID id, const std::string& filename)
 {
 	std::unique_ptr<sf::Texture> texture(new sf::Texture());
 	if (!texture->loadFromFile(filename))
-		throw std::runtime_error("TextureHolder::load - Failed to load " + filename);
+		if(!texture->loadFromFile("../Planets/"+filename))
+			throw std::runtime_error("TextureHolder::load - Failed to load " + filename);
 
 	auto inserted = m_texMap.insert(std::make_pair(id, std::move(texture)));
 

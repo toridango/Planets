@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Planets", "Planets\Planets.vcxproj", "{6F517086-D305-445D-8D35-A7F6BF78B324}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dummy", "Dummy\Dummy.vcxproj", "{E02FC7A7-B21B-4694-8C22-1CD64E12F29A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,8 +23,18 @@ Global
 		{6F517086-D305-445D-8D35-A7F6BF78B324}.Release|x64.Build.0 = Release|x64
 		{6F517086-D305-445D-8D35-A7F6BF78B324}.Release|x86.ActiveCfg = Release|Win32
 		{6F517086-D305-445D-8D35-A7F6BF78B324}.Release|x86.Build.0 = Release|Win32
+		{E02FC7A7-B21B-4694-8C22-1CD64E12F29A}.Debug|x64.ActiveCfg = Debug|x64
+		{E02FC7A7-B21B-4694-8C22-1CD64E12F29A}.Debug|x64.Build.0 = Debug|x64
+		{E02FC7A7-B21B-4694-8C22-1CD64E12F29A}.Debug|x86.ActiveCfg = Debug|Win32
+		{E02FC7A7-B21B-4694-8C22-1CD64E12F29A}.Release|x64.ActiveCfg = Release|x64
+		{E02FC7A7-B21B-4694-8C22-1CD64E12F29A}.Release|x64.Build.0 = Release|x64
+		{E02FC7A7-B21B-4694-8C22-1CD64E12F29A}.Release|x86.ActiveCfg = Release|Win32
+		{E02FC7A7-B21B-4694-8C22-1CD64E12F29A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4C97B1F9-6725-47CD-8DEF-5AD643757BF4}
 	EndGlobalSection
 EndGlobal

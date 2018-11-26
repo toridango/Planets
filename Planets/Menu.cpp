@@ -7,7 +7,7 @@ Menu::Menu()
 	, b_host(BHOST), b_join(BJOIN), b_exit(EXIT)
 	, m_background()
 {
-	if (!m_bg_tex.loadFromFile("Media/eclipse.jpg"))
+	if (!m_bg_tex.loadFromFile("../Planets/Media/eclipse.jpg"))
 	{
 		throw "Image didn't load!";
 	}

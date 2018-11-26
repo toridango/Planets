@@ -9,12 +9,12 @@ Game::Game()
 	, m_sceneGraph()
 	, m_font()
 	, m_info()
+	, m_clock()
 {
-	if (!m_font.loadFromFile("Media/Fonts/bahnschrift.ttf"))
+	if (!m_font.loadFromFile("../Planets/Media/Fonts/bahnschrift.ttf"))
 	{
 		throw "Font didn't load!";
 	}
-	// TODO: Info text not showing?
 	m_info.setFont(m_font);
 	m_info.setFillColor(sf::Color(255, 255, 255, 255));
 	m_info.setString("");
@@ -37,12 +37,23 @@ Game::Game()
 		m_infoHead = "Waiting for opponent to join...\nYour Ip address: ";
 		m_auxString = local_ip.toString();
 		m_info.setString(m_infoHead + m_auxString);
+		render();
+
+		sf::TcpListener listener;
+		listener.listen(PORT);
+		listener.accept(m_socket);
+		m_socket.setBlocking(false);
+		m_infoHead = "Opponent found:\n";
+		m_auxString = m_socket.getRemoteAddress().toString();
+		sf::Time savedTime = m_clock.getElapsedTime();
+		m_connected = true;
 	}
 	else
 	{
 		m_infoHead = "Enter host IP address\n";
 		m_info.setString(m_infoHead);
 	}
+
 }
 
 
@@ -166,8 +177,17 @@ void Game::handleTextEntered(sf::Event e)
 			bool pass = std::regex_match(m_auxString, ipv4_regex);
 			if (pass)
 			{
-				m_infoHead = "";
-				m_auxString = "";
+				if (m_socket.connect(m_auxString, PORT, sf::Time(sf::milliseconds(2000))) == sf::Socket::Done)
+				{
+					m_infoHead = "Connected!";
+					m_connected = true;
+					m_socket.setBlocking(false);
+				}
+				else
+				{
+					m_infoHead = "Connecion timed out. Check address and try again\n";
+				}
+
 				pass = false;
 			}
 			else
@@ -179,21 +199,45 @@ void Game::handleTextEntered(sf::Event e)
 	}
 }
 
+void Game::addShot(sf::Vector2f iPos, sf::Vector2f dir, bool allied)
+{
+	std::unique_ptr<Shot> newshot(new Shot(m_textures, iPos, dir, allied));
+	m_sceneGraph.attachChild(std::move(newshot));
+}
 
 void Game::spawnShot(sf::Vector2i mousePos)
 {
-	// Direction of shot
-	sf::Vector2f spawnPos = m_crossH->getWorldPosition();
-	float y = (float)mousePos.y - m_player->getWorldPosition().y;
-	float x = (float)mousePos.x - m_player->getWorldPosition().x;
-	float mod = sqrt(x*x + y*y);
-	sf::Vector2f dir(x / mod, y / mod);
+	if (m_connected)
+	{
+		// Direction of shot
+		sf::Vector2f spawnPos = m_crossH->getWorldPosition();
+		float y = (float)mousePos.y - m_player->getWorldPosition().y;
+		float x = (float)mousePos.x - m_player->getWorldPosition().x;
+		float mod = sqrt(x*x + y*y);
+		sf::Vector2f dir(x / mod, y / mod);
 
-	sf::Vector2f iPos(spawnPos.x, spawnPos.y);
+		sf::Vector2f iPos(spawnPos.x, spawnPos.y);
 
-	std::unique_ptr<Shot> newshot(new Shot(m_textures, iPos, dir, true));
-	m_sceneGraph.attachChild(std::move(newshot));
+		sf::Packet packetSend;
+		packetSend << iPos.x << iPos.y << dir.x << dir.y;
+		m_socket.send(packetSend);
+
+		addShot(iPos, dir, true);
+	}
 }
+
+void Game::incomingShot(float iPosx, float iPosy, float dirx, float diry)
+{
+	if (m_connected)
+	{
+		// Direction of shot
+		sf::Vector2f dir(dirx, diry);
+		sf::Vector2f iPos(iPosx, iPosy);
+
+		addShot(iPos, dir, false);
+	}
+}
+
 
 
 void Game::processEvents()
@@ -233,8 +277,14 @@ void Game::update(sf::Time deltaTime)
 {
 
 	m_info.setString(m_infoHead + m_auxString);
-
-
+	
+	sf::Packet packetReceive;
+	m_socket.receive(packetReceive);
+	float iPosx, iPosy, dirx, diry;
+	if (packetReceive >> iPosx >> iPosy >> dirx >> diry)
+	{
+		incomingShot(iPosx, iPosy, dirx, diry);
+	}
 
 	sf::Vector2f movement(0.0f, 0.0f);
 	sf::Vector2i mousePos = sf::Mouse::getPosition(m_window);
@@ -260,11 +310,19 @@ void Game::update(sf::Time deltaTime)
 	//m_player->move(deltaTime.asSeconds());
 	//m_opponent->move(deltaTime.asSeconds());
 	m_crossH->setAngle(a*PI);
-	m_sceneGraph.update(deltaTime);
-	updateWorldMap("player", m_player->getWorldPosition());
-	updateWorldMap("opponent", m_opponent->getWorldPosition());
+	if (m_connected)
+	{
+		if ((m_clock.getElapsedTime() - m_savedTime).asSeconds() > 2.0)
+		{
+			m_infoHead = m_auxString = "";
+		}
 
-	m_sceneGraph.removeWrecks();
+		m_sceneGraph.update(deltaTime);
+		updateWorldMap("player", m_player->getWorldPosition());
+		updateWorldMap("opponent", m_opponent->getWorldPosition());
+		m_sceneGraph.removeWrecks();
+	}
+
 	//m_auxString = std::to_string(m_sceneGraph.getChildrenCount());
 }
 
