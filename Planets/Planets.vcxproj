@@ -159,6 +159,7 @@
     <ClCompile Include="Planet.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="SceneNode.cpp" />
+    <ClCompile Include="Shot.cpp" />
     <ClCompile Include="Sun.cpp" />
     <ClCompile Include="TextureHolder.cpp" />
   </ItemGroup>
@@ -170,6 +171,7 @@
     <ClInclude Include="Planet.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="SceneNode.h" />
+    <ClInclude Include="Shot.h" />
     <ClInclude Include="Sun.h" />
     <ClInclude Include="TextureHolder.h" />
   </ItemGroup>

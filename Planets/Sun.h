@@ -11,7 +11,8 @@ public:
 	explicit Sun(TextureHolder& textures);
 	virtual void drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const;
 
-
+	virtual sf::FloatRect getGlobalBounds() const;
+	bool collision(sf::Vector2f pos);
 
 private:
 	sf::Sprite m_sprite;

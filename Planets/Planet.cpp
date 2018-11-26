@@ -20,10 +20,12 @@ Planet::Planet(Planets::Type type, TextureHolder& textures)
 }
 
 
+
 void Planet::drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	target.draw(m_sprite, states);
 }
+
 
 Textures::ID Planet::toTextureID(Planets::Type type)
 {
@@ -43,18 +45,35 @@ Textures::ID Planet::toTextureID(Planets::Type type)
 	return Textures::SUN;
 }
 
-void Planet::move(float deltatime)
+
+void Planet::updateCurrent(sf::Time dt)
 {
+	float deltatime = dt.asSeconds();
 	m_angle += deltatime * m_angularSpeed;
 
 	float x = m_orbitRadius * cos(m_angle / PI);
 	float y = m_orbitRadius * sin(m_angle / PI);
 	
 	setPosition(x, y);
+
 }
 
+/*void Planet::move(float deltatime)
+{
+	m_angle += deltatime * m_angularSpeed;
 
-void Planet::setRadius(float r)
+	float x = m_orbitRadius * cos(m_angle / PI);
+	float y = m_orbitRadius * sin(m_angle / PI);
+
+	setPosition(x, y);
+}*/
+
+sf::FloatRect Planet::getGlobalBounds() const
+{
+	return m_sprite.getGlobalBounds();
+}
+
+void Planet::setOrbitRadius(float r)
 {
 	// Initialise angular speed
 	// angular speed is proportional to sqrt of mass and inversely proportional to radius^3/2
@@ -76,4 +95,11 @@ void Planet::setAngle(float a)
 	float y = m_orbitRadius * sin(a / PI);
 
 	setPosition(x, y);
+}
+
+bool Planet::collision(sf::Vector2f pos)
+{
+	float distance = sqrt(pow(m_sprite.getPosition().x - pos.x, 2) + pow(m_sprite.getPosition().y - pos.y, 2));
+
+	return distance <= (m_sprite.getGlobalBounds().height / 2);
 }

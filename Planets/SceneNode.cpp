@@ -1,10 +1,14 @@
 
 #include "SceneNode.h"
+std::map<std::string, sf::Vector2f> SceneNode::worldMap;
+std::map<std::string, sf::FloatRect> SceneNode::worldSizes;
+
 
 
 SceneNode::SceneNode()
 	: m_children()
 	, m_parent(nullptr)
+	//, m_isMarkedForRemoval(false)
 {
 
 }
@@ -44,11 +48,28 @@ void SceneNode::updateCurrent(sf::Time dt)
 	// Do nothing by default
 }
 
+sf::FloatRect SceneNode::getGlobalBounds() const
+{
+	return sf::FloatRect();
+}
+
 void SceneNode::updateChildren(sf::Time dt)
 {
 	for (SNPtr& child : m_children)
 	{
 		child->update(dt);
+		/*if (outOfBounds(child->getWorldPosition()))
+		{
+			child->setMarkedForRemoval(true);
+		}
+		else if (child->getGlobalBounds().intersects(worldSizes["sun"]))
+		{
+			child->setMarkedForRemoval(true);
+		}
+		else if (child->getGlobalBounds().intersects(worldSizes["opponent"]))
+		{
+			child->setMarkedForRemoval(true);
+		}*/
 	}
 }
 
@@ -60,6 +81,7 @@ void SceneNode::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	drawCurrent(target, states);
 
 	drawChildren(target, states);
+
 }
 
 void SceneNode::drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const
@@ -92,4 +114,68 @@ sf::Transform SceneNode::getWorldTransform() const
 	return transform;
 }
 
-// TODO: pag61, continue creating types of entities and overwrite drawCurrent with their sprites
+bool SceneNode::outOfBounds(sf::Vector2f pos)
+{
+	if (pos.x > WIN_WIDTH || pos.x < 0)
+		return true;
+	if (pos.y > WIN_HEIGHT || pos.y < 0)
+		return true;
+	return false;
+}
+
+void SceneNode::setMarkedForRemoval(bool b) 
+{
+	m_isMarkedForRemoval = b;
+}
+
+bool SceneNode::isMarkedForRemoval() const
+{
+	return m_isMarkedForRemoval;
+}
+
+
+void SceneNode::removeWrecks()
+{
+	int i = getChildrenCount();
+
+
+	auto wreckfieldBegin = std::remove_if(m_children.begin(), m_children.end(), std::mem_fn(&SceneNode::isMarkedForRemoval));
+	//auto wreckfieldBegin = std::remove_if(m_children.begin(), m_children.end(), [](auto const& pi) { return pi->isMarkedForRemoval(); });
+	
+	m_children.erase(wreckfieldBegin, m_children.end());
+
+	std::for_each(m_children.begin(), m_children.end(), std::mem_fn(&SceneNode::removeWrecks));
+
+
+	if (i != getChildrenCount())
+	{
+		int j = 0;
+	}
+}
+
+// Auxiliary function to check if nodes were being removed
+int SceneNode::getChildrenCount()
+{
+	int i = 0;
+	for (SNPtr& child : m_children)
+	{
+		++i;
+		/*if (child->isMarkedForRemoval()) ++i;
+		else i += child->getChildrenCount();*/
+	}
+	return i;
+}
+
+bool SceneNode::sunCollision(sf::Vector2f pos)
+{
+	float distance = sqrt(pow(worldMap["sun"].x - pos.x, 2) + pow(worldMap["sun"].y - pos.y, 2));
+
+	return distance <= 0.85*(worldSizes["sun"].height / 2);
+}
+
+bool SceneNode::oppoCollision(sf::Vector2f pos)
+{
+	float distance = sqrt(pow(worldMap["opponent"].x - pos.x, 2) + pow(worldMap["opponent"].y - pos.y, 2));
+
+	return distance <= (worldSizes["opponent"].height / 2);
+}
