@@ -33,7 +33,6 @@ private:
 	void incomingShot(float iPosx, float iPosy, float dirx, float diry);
 	void updateWorldMap(std::string key, sf::Vector2f);
 
-
 private:
 	sf::RenderWindow m_window;
 	TextureHolder m_textures;

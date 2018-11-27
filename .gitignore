@@ -1,3 +1,9 @@
+# Custom
+/Debug
+/Release
+/Dummy
+/Planets/Media
+
 # Compiled Object files
 *.slo
 *.lo
