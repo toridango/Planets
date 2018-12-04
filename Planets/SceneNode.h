@@ -46,7 +46,7 @@ public:
 	virtual sf::FloatRect getGlobalBounds() const;
 	static bool sunCollision(sf::Vector2f pos);
 	static bool oppoCollision(sf::Vector2f pos);
-	
+	sf::Vector2f getParentPosition() const;
 
 private:
 	virtual void updateCurrent(sf::Time);

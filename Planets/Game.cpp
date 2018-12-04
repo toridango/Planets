@@ -71,6 +71,8 @@ void Game::loadTextures()
 	m_textures.load(Textures::CROSSHAIRS, "Media/Textures/crosshairs.png");
 	m_textures.load(Textures::LASERPLAYER, "Media/Textures/beam_player.png");
 	m_textures.load(Textures::LASEROPPO, "Media/Textures/beam_opponent.png");
+	m_textures.load(Textures::SHIELDPLAYER, "Media/Textures/shield_player.png");
+	m_textures.load(Textures::SHIELDOPPO, "Media/Textures/shield_opponent.png");
 
 
 }
@@ -121,6 +123,10 @@ void Game::buildScene()
 	m_crossH->setOrbitRadius(50.0);
 	m_player->attachChild(std::move(crosshairs));
 
+	std::unique_ptr<Shield> allyShield(new Shield(m_textures, true));
+	m_allySh = allyShield.get();
+	m_player->attachChild(std::move(allyShield));
+
 	std::unique_ptr<Planet> oppo(new Planet(Planets::Lava, m_textures));
 	m_opponent = oppo.get();
 	// Pos with respect to parent (sun)
@@ -129,13 +135,10 @@ void Game::buildScene()
 	SceneNode::worldMap.insert(std::make_pair("opponent", m_opponent->getWorldPosition()));
 	SceneNode::worldSizes.insert(std::make_pair("opponent", m_opponent->getGlobalBounds()));
 
+	std::unique_ptr<Shield> enemyShield(new Shield(m_textures, false));
+	m_enemySh = enemyShield.get();
+	m_opponent->attachChild(std::move(enemyShield));
 
-	/* Master TODO:
-	*	- Set up networking
-	*
-	*	Others:
-	*	- asteroids
-	*/
 
 
 }
@@ -202,6 +205,7 @@ void Game::handleTextEntered(sf::Event e)
 void Game::addShot(sf::Vector2f iPos, sf::Vector2f dir, bool allied)
 {
 	std::unique_ptr<Shot> newshot(new Shot(m_textures, iPos, dir, allied));
+	m_shots.push_back(newshot.get()); // TO-Do use this vector of pointers for the collisions
 	m_sceneGraph.attachChild(std::move(newshot));
 }
 
@@ -257,7 +261,15 @@ void Game::processEvents()
 			m_window.close();
 			break;
 		case sf::Event::MouseButtonPressed:
-			spawnShot(sf::Mouse::getPosition(m_window));
+			if (event.mouseButton.button == sf::Mouse::Right)
+			{
+				// Mysterious black magicks: reaches this point but doesn't enter the function
+				activateShield(true);
+			}
+			else if (event.mouseButton.button == sf::Mouse::Left)
+			{
+				spawnShot(sf::Mouse::getPosition(m_window));
+			}
 			break;
 		case sf::Event::TextEntered:
 			handleTextEntered(event);
@@ -265,6 +277,31 @@ void Game::processEvents()
 		}
 	}
 }
+
+void Game::activateShield(bool allied)
+{
+	// TO-DO offset time for enemy activation (elapsed time since timestamp)
+	// This implies a global clock class is needed
+	if (allied)
+	{
+		if (m_connected)
+		{
+			float elapsed = m_clock.getElapsedTime().asSeconds();
+			sf::Packet packetSend;
+			packetSend << elapsed;
+			m_socket.send(packetSend);
+
+			m_allySh->setActive(true);
+		}
+	}
+	else
+	{
+
+		m_enemySh->setActive(true);
+	}
+}
+
+
 
 void Game::updateWorldMap(std::string key, sf::Vector2f value)
 {
@@ -280,10 +317,17 @@ void Game::update(sf::Time deltaTime)
 	
 	sf::Packet packetReceive;
 	m_socket.receive(packetReceive);
-	float iPosx, iPosy, dirx, diry;
+
+	// TO-DO: if not allied, check timestamp and predict starting position
+
+	float iPosx, iPosy, dirx, diry, elapsed;
 	if (packetReceive >> iPosx >> iPosy >> dirx >> diry)
 	{
 		incomingShot(iPosx, iPosy, dirx, diry);
+	}
+	if (packetReceive >> elapsed)
+	{
+		activateShield(false);
 	}
 
 	sf::Vector2f movement(0.0f, 0.0f);

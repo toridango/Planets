@@ -179,3 +179,8 @@ bool SceneNode::oppoCollision(sf::Vector2f pos)
 
 	return distance <= (worldSizes["opponent"].height / 2);
 }
+
+sf::Vector2f SceneNode::getParentPosition() const
+{
+	return m_parent->getWorldPosition();
+}

@@ -10,6 +10,7 @@
 #include "Button.h"
 #include "Sun.h"
 #include "Shot.h"
+#include "Shield.h"
 
 const unsigned short PORT = 5000;
 
@@ -32,6 +33,7 @@ private:
 	void spawnShot(sf::Vector2i mousePos);
 	void incomingShot(float iPosx, float iPosy, float dirx, float diry);
 	void updateWorldMap(std::string key, sf::Vector2f);
+	void activateShield(bool allied);
 
 private:
 	sf::RenderWindow m_window;
@@ -42,7 +44,9 @@ private:
 	Player* m_player;
 	Planet* m_opponent;
 	Planet* m_crossH;
-	std::vector<std::unique_ptr<Shot>> m_shots;
+	Shield* m_allySh;
+	Shield* m_enemySh;
+	std::vector<Shot*> m_shots;
 	SceneNode m_sceneGraph;
 	BTYPE type;
 	std::regex ipv4_regex;
@@ -55,6 +59,7 @@ private:
 	sf::IpAddress local_ip;
 	sf::TcpSocket m_socket;
 	sf::Time m_savedTime;
+
 	bool m_connected = false;
 
 };
