@@ -31,7 +31,7 @@ private:
 	void handleTextEntered(sf::Event e);
 	void addShot(sf::Vector2f iPos, sf::Vector2f dir, bool allied);
 	void spawnShot(sf::Vector2i mousePos);
-	void incomingShot(float iPosx, float iPosy, float dirx, float diry);
+	void incomingShot(float iPosx, float iPosy, float dirx, float diry, float elapsed);
 	void updateWorldMap(std::string key, sf::Vector2f);
 	void activateShield(bool allied);
 

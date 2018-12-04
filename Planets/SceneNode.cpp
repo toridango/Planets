@@ -166,18 +166,37 @@ int SceneNode::getChildrenCount()
 	return i;
 }
 
+bool SceneNode::collision(float distance, float radius)
+{
+	return distance <= radius;
+}
+
 bool SceneNode::sunCollision(sf::Vector2f pos)
 {
-	float distance = sqrt(pow(worldMap["sun"].x - pos.x, 2) + pow(worldMap["sun"].y - pos.y, 2));
 
-	return distance <= 0.85*(worldSizes["sun"].height / 2);
+	sf::Vector2f absSunPos = SceneNode::worldMap["sun"] - pos;
+	float distance = sqrt(pow(absSunPos.x, 2) + pow(absSunPos.y, 2));
+	float radius = 0.85*(worldSizes["sun"].height / 2);
+
+	return collision(distance, radius);
 }
 
 bool SceneNode::oppoCollision(sf::Vector2f pos)
 {
-	float distance = sqrt(pow(worldMap["opponent"].x - pos.x, 2) + pow(worldMap["opponent"].y - pos.y, 2));
+	sf::Vector2f absOpponentPos = SceneNode::worldMap["opponent"] - pos;
+	float distance = sqrt(pow(absOpponentPos.x, 2) + pow(absOpponentPos.y, 2));
+	float radius = (worldSizes["opponent"].height / 2);
 
-	return distance <= (worldSizes["opponent"].height / 2);
+	return collision(distance, radius);
+}
+
+bool SceneNode::playerCollision(sf::Vector2f pos)
+{
+	sf::Vector2f absPlayerPos = SceneNode::worldMap["player"] - pos;
+	float distance = sqrt(pow(absPlayerPos.x, 2) + pow(absPlayerPos.y, 2));
+	float radius = (worldSizes["player"].height / 2);
+
+	return collision(distance, radius);
 }
 
 sf::Vector2f SceneNode::getParentPosition() const

@@ -231,11 +231,15 @@ void Game::spawnShot(sf::Vector2i mousePos)
 	addShot(iPos, dir, true);
 }
 
-void Game::incomingShot(float iPosx, float iPosy, float dirx, float diry)
+void Game::incomingShot(float iPosx, float iPosy, float dirx, float diry, float elapsed)
 {
 	// Direction of shot
 	sf::Vector2f dir(dirx, diry);
 	sf::Vector2f iPos(iPosx, iPosy);
+
+	// Position prediction with latency into account
+	float dt = m_clock.getElapsedTime().asSeconds() - elapsed;
+	iPos += dt * dir;
 
 	addShot(iPos, dir, false);
 }
@@ -328,7 +332,7 @@ void Game::update(sf::Time deltaTime)
 			packetReceive >> ID >> iPosx >> iPosy >> dirx >> diry >> elapsed;
 			if (ID == 0)
 			{
-				incomingShot(iPosx, iPosy, dirx, diry);
+				incomingShot(iPosx, iPosy, dirx, diry, elapsed);
 			}
 			else if (ID == 1)
 			{

@@ -44,8 +44,10 @@ public:
 	void removeWrecks();
 	int getChildrenCount();
 	virtual sf::FloatRect getGlobalBounds() const;
+	static bool collision(float distance, float radius);
 	static bool sunCollision(sf::Vector2f pos);
 	static bool oppoCollision(sf::Vector2f pos);
+	static bool playerCollision(sf::Vector2f pos);
 	sf::Vector2f getParentPosition() const;
 
 private:

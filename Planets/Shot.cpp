@@ -43,10 +43,18 @@ void Shot::drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const
 	convex.setPoint(3, sf::Vector2f(b.left, b.top + b.height));
 	target.draw(convex, states);*/
 
+	// This drws the sun's shape correctly, but doesnt work if used for collision ??
 	/*float radius = 0.85*(worldSizes["sun"].height) / 2.0;
 	sf::CircleShape shape(radius);
-	shape.setPosition(sf::Vector2f(worldMap["sun"].x - radius, worldMap["sun"].y - radius));
+	sf::Vector2f absSunPos = SceneNode::worldMap["sun"] - this->getWorldPosition();
+	shape.setPosition(sf::Vector2f(absSunPos.x - radius, absSunPos.y - radius));
 	shape.setFillColor(sf::Color(100, 250, 50));
+	target.draw(shape, states);*/
+	/*sf::CircleShape shape(10.0);
+	shape.setPosition(getWorldPosition());
+	shape.setFillColor(sf::Color(100, 250, 50));
+	target.draw(shape, states);
+	shape.setPosition(getWorldPosition());
 	target.draw(shape, states);*/
 
 
@@ -67,21 +75,32 @@ void Shot::updateCurrent(sf::Time dt)
 	sf::FloatRect sunBRect = getWorldTransform().transformRect(worldSizes["sun"]);
 	sf::FloatRect oppoBRect = getWorldTransform().transformRect(worldSizes["opponent"]);
 
+	float sunRadius = 0.85*(worldSizes["sun"].height) / 2.0;
+	float planetRadius = 0.85*(worldSizes["player"].height) / 2.0;
+	sf::Vector2f absSunPos = SceneNode::worldMap["sun"] - getWorldPosition();
+	sf::Vector2f absPlayerPos = SceneNode::worldMap["player"] - getWorldPosition();
+	sf::Vector2f absOpponentPos = SceneNode::worldMap["opponent"] - getWorldPosition();
+
 	if (outOfBounds(getWorldPosition()))
 	{
 		setMarkedForRemoval(true);
 	}
 	//else if (boundingRect.intersects(sunBRect))
 	//else if (m_sprite.getGlobalBounds().intersects(worldSizes["sun"]))
-	/*else if (SceneNode::sunCollision(m_sprite.getPosition()))
+	else if (SceneNode::sunCollision(getWorldPosition()))
+	//else if (sqrt(pow(absSunPos.x, 2) + pow(absSunPos.y, 2)) <= sunRadius)
 	{
 		setMarkedForRemoval(true);
 	}
 	//else if (boundingRect.intersects(oppoBRect))
 	//else if (m_sprite.getGlobalBounds().intersects(worldSizes["opponent"]))
-	else if (SceneNode::oppoCollision(m_sprite.getPosition()))
+	else if (SceneNode::oppoCollision(getWorldPosition()))
 	{
 		setMarkedForRemoval(true);
-	}*/
+	}
+	else if (SceneNode::playerCollision(getWorldPosition()))
+	{
+		setMarkedForRemoval(true);
+	}
 
 }
