@@ -5,7 +5,10 @@
 Sun::Sun(TextureHolder& textures)
 	: m_sprite(textures.get(Textures::SUN))
 {
-	m_size = sf::Vector2f(300.0, 300.0);
+	float sizeX = 300.0f;
+	float sizeY = 300.0f;
+	//m_size = sf::Vector2f(300.0f, 300.0f);
+	m_size = sf::Vector2f(0.666 * sizeX, 0.666 * sizeY);
 	sf::Texture tex = textures.get(Textures::SUN);
 	m_sprite.scale(sf::Vector2f(m_size.x / (float)tex.getSize().x, m_size.y / (float)tex.getSize().y));
 

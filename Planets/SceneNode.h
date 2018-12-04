@@ -12,8 +12,8 @@
 #include <SFML/System/NonCopyable.hpp>
 #include <SFML/System/Time.hpp>
 
-constexpr auto WIN_WIDTH = 1580;
-constexpr auto WIN_HEIGHT = 1000;
+constexpr auto WIN_WIDTH = (int)(2.0 / 3.0 * 1580);
+constexpr auto WIN_HEIGHT = (int)(2.0 / 3.0 * 1000);
 
 class SceneNode
 	: public sf::Transformable

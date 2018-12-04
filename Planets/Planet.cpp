@@ -5,7 +5,10 @@
 Planet::Planet(Planets::Type type, TextureHolder& textures)
 	: m_sprite(textures.get(toTextureID(type)))
 {
-	m_size = sf::Vector2f(50.0, 50.0);
+	float sizeX = 50.0f;
+	float sizeY = 50.0f;
+	//m_size = sf::Vector2f(50.0, 50.0);
+	m_size = sf::Vector2f(0.666 * sizeX, 0.666 * sizeY);
 	sf::Texture tex = textures.get(toTextureID(type));
 	m_sprite.scale(sf::Vector2f(m_size.x / (float)tex.getSize().x, m_size.y / (float)tex.getSize().y));
 

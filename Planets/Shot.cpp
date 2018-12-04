@@ -11,10 +11,13 @@ Shot::Shot(TextureHolder& textures, sf::Vector2f origin, sf::Vector2f velocity, 
 	m_velocity = velocity;
 	m_allied = allied;
 
+	float sizeX = 10.0f;
+	float sizeY = 30.0f;
 
 	sf::Texture tex = textures.get(allied ? Textures::LASERPLAYER : Textures::LASEROPPO);
 
-	m_size = sf::Vector2f(10.0, 30.0);
+	//m_size = sf::Vector2f(10.0, 30.0);
+	m_size = sf::Vector2f(0.666 * sizeX, 0.666 * sizeY);
 	m_sprite.scale(sf::Vector2f(m_size.x / (float)tex.getSize().x, m_size.y / (float)tex.getSize().y));
 
 	sf::FloatRect bounds = m_sprite.getLocalBounds();

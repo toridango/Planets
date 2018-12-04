@@ -6,7 +6,10 @@
 Shield::Shield(TextureHolder& textures, bool allied)
 	: m_sprite(textures.get(allied ? Textures::SHIELDPLAYER : Textures::SHIELDOPPO))
 {
-	m_size = sf::Vector2f(60.0, 60.0);
+	float sizeX = 60.0f;
+	float sizeY = 60.0f;
+	//m_size = sf::Vector2f(60.0, 60.0);
+	m_size = sf::Vector2f(0.666 * sizeX, 0.666 * sizeY);
 	sf::Texture tex = textures.get(allied ? Textures::SHIELDPLAYER : Textures::SHIELDOPPO);
 	m_sprite.scale(sf::Vector2f(m_size.x / (float)tex.getSize().x, m_size.y / (float)tex.getSize().y));
 

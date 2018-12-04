@@ -18,7 +18,7 @@ Game::Game()
 	m_info.setFont(m_font);
 	m_info.setFillColor(sf::Color(255, 255, 255, 255));
 	m_info.setString("");
-	m_info.setPosition(650.0, 150.0);
+	//m_info.setPosition(650.0, 150.0);
 	local_ip = sf::IpAddress::getLocalAddress();
 
 	ipv4_regex = std::regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.)?){4}$");
@@ -30,7 +30,7 @@ Game::Game()
 	m_infoHead = "";
 
 
-	m_info.setPosition(550.0, 150.0);
+	m_info.setPosition(WIN_WIDTH / 3.0f, WIN_HEIGHT / 10.0f);
 	m_auxString = "";
 	if (type == BTYPE::BHOST)
 	{
@@ -39,10 +39,10 @@ Game::Game()
 		m_info.setString(m_infoHead + m_auxString);
 		render();
 
+		m_socket.setBlocking(false);
 		sf::TcpListener listener;
 		listener.listen(PORT);
 		listener.accept(m_socket);
-		m_socket.setBlocking(false);
 		m_infoHead = "Opponent found:\n";
 		m_auxString = m_socket.getRemoteAddress().toString();
 		sf::Time savedTime = m_clock.getElapsedTime();
@@ -82,8 +82,10 @@ void Game::buildScene()
 
 
 	sf::Texture& texture = m_textures.get(Textures::SUN);
-	insideOrbitRadius = 250.f;
-	outsideOrbitRadius = 450.f;
+	/*insideOrbitRadius = 250.f;
+	outsideOrbitRadius = 450.f;*/
+	insideOrbitRadius = 0.666 * 250.f;
+	outsideOrbitRadius = 0.666 * 450.f;
 	float playerRadius;
 	float oppoRadius;
 
@@ -101,7 +103,8 @@ void Game::buildScene()
 	std::unique_ptr<Sun> sun(new Sun(m_textures));
 	m_sun = sun.get();
 	// Pos with respect to parent (root)
-	sf::Vector2f sunPos(790, 500);
+	//sf::Vector2f sunPos(790, 500);
+	sf::Vector2f sunPos(WIN_WIDTH / 2.0f, WIN_HEIGHT / 2.0f);
 	m_sun->setPosition(sunPos.x, sunPos.y);
 	m_sceneGraph.attachChild(std::move(sun));
 	SceneNode::worldMap.insert(std::make_pair("sun", sunPos));
@@ -211,35 +214,30 @@ void Game::addShot(sf::Vector2f iPos, sf::Vector2f dir, bool allied)
 
 void Game::spawnShot(sf::Vector2i mousePos)
 {
-	if (m_connected)
-	{
-		// Direction of shot
-		sf::Vector2f spawnPos = m_crossH->getWorldPosition();
-		float y = (float)mousePos.y - m_player->getWorldPosition().y;
-		float x = (float)mousePos.x - m_player->getWorldPosition().x;
-		float mod = sqrt(x*x + y*y);
-		sf::Vector2f dir(x / mod, y / mod);
+	// Direction of shot
+	sf::Vector2f spawnPos = m_crossH->getWorldPosition();
+	float y = (float)mousePos.y - m_player->getWorldPosition().y;
+	float x = (float)mousePos.x - m_player->getWorldPosition().x;
+	float mod = sqrt(x*x + y * y);
+	sf::Vector2f dir(x / mod, y / mod);
+	sf::Vector2f iPos(spawnPos.x, spawnPos.y);
+	sf::Int32 ID = 0;
+	float elapsed = m_clock.getElapsedTime().asSeconds();
 
-		sf::Vector2f iPos(spawnPos.x, spawnPos.y);
+	sf::Packet packetSend;
+	packetSend << ID << iPos.x << iPos.y << dir.x << dir.y << elapsed;
+	m_socket.send(packetSend);
 
-		sf::Packet packetSend;
-		packetSend << iPos.x << iPos.y << dir.x << dir.y;
-		m_socket.send(packetSend);
-
-		addShot(iPos, dir, true);
-	}
+	addShot(iPos, dir, true);
 }
 
 void Game::incomingShot(float iPosx, float iPosy, float dirx, float diry)
 {
-	if (m_connected)
-	{
-		// Direction of shot
-		sf::Vector2f dir(dirx, diry);
-		sf::Vector2f iPos(iPosx, iPosy);
+	// Direction of shot
+	sf::Vector2f dir(dirx, diry);
+	sf::Vector2f iPos(iPosx, iPosy);
 
-		addShot(iPos, dir, false);
-	}
+	addShot(iPos, dir, false);
 }
 
 
@@ -261,14 +259,18 @@ void Game::processEvents()
 			m_window.close();
 			break;
 		case sf::Event::MouseButtonPressed:
-			if (event.mouseButton.button == sf::Mouse::Right)
+			if (m_connected)
 			{
-				// Mysterious black magicks: reaches this point but doesn't enter the function
-				activateShield(true);
-			}
-			else if (event.mouseButton.button == sf::Mouse::Left)
-			{
-				spawnShot(sf::Mouse::getPosition(m_window));
+				if (event.mouseButton.button == sf::Mouse::Right)
+				{
+					bool allied = true;
+					// Mysterious black magicks: reaches this point but doesn't enter the function
+					activateShield(allied);
+				}
+				else if (event.mouseButton.button == sf::Mouse::Left)
+				{
+					spawnShot(sf::Mouse::getPosition(m_window));
+				}
 			}
 			break;
 		case sf::Event::TextEntered:
@@ -284,19 +286,16 @@ void Game::activateShield(bool allied)
 	// This implies a global clock class is needed
 	if (allied)
 	{
-		if (m_connected)
-		{
-			float elapsed = m_clock.getElapsedTime().asSeconds();
-			sf::Packet packetSend;
-			packetSend << elapsed;
-			m_socket.send(packetSend);
+		float elapsed = m_clock.getElapsedTime().asSeconds();
+		sf::Packet packetSend;
+		sf::Int32 ID = 1;
+		packetSend << ID << 0.0 << 0.0 << 0.0 << 0.0 << elapsed;
+		m_socket.send(packetSend);
 
-			m_allySh->setActive(true);
-		}
+		m_allySh->setActive(true);
 	}
-	else
+	else if (!allied)
 	{
-
 		m_enemySh->setActive(true);
 	}
 }
@@ -314,48 +313,54 @@ void Game::update(sf::Time deltaTime)
 {
 
 	m_info.setString(m_infoHead + m_auxString);
-	
-	sf::Packet packetReceive;
-	m_socket.receive(packetReceive);
 
-	// TO-DO: if not allied, check timestamp and predict starting position
-
-	float iPosx, iPosy, dirx, diry, elapsed;
-	if (packetReceive >> iPosx >> iPosy >> dirx >> diry)
-	{
-		incomingShot(iPosx, iPosy, dirx, diry);
-	}
-	if (packetReceive >> elapsed)
-	{
-		activateShield(false);
-	}
-
-	sf::Vector2f movement(0.0f, 0.0f);
-	sf::Vector2i mousePos = sf::Mouse::getPosition(m_window);
-
-	/*if (m_player->isMoving(m_player->UP))
-		movement.y -= m_player->getSpeed();
-
-	if (m_player->isMoving(m_player->DOWN))
-		movement.y += m_player->getSpeed();
-
-	if (m_player->isMoving(m_player->LEFT))
-		movement.x -= m_player->getSpeed();
-
-	if (m_player->isMoving(m_player->RIGHT))
-		movement.x += m_player->getSpeed();*/
-
-	float y = (float)mousePos.y - m_player->getWorldPosition().y;
-	float x = (float)mousePos.x - m_player->getWorldPosition().x;
-
-	float a = atan2(y, x);
-
-
-	//m_player->move(deltaTime.asSeconds());
-	//m_opponent->move(deltaTime.asSeconds());
-	m_crossH->setAngle(a*PI);
 	if (m_connected)
 	{
+		sf::Packet packetReceive;
+		sf::Socket::Status stat = m_socket.receive(packetReceive);
+
+		// TO-DO: if not allied, check timestamp and predict starting position
+
+		sf::Int32 ID;
+		float iPosx, iPosy, dirx, diry, elapsed;
+		if (stat == sf::Socket::Status::Done)
+		{
+			packetReceive >> ID >> iPosx >> iPosy >> dirx >> diry >> elapsed;
+			if (ID == 0)
+			{
+				incomingShot(iPosx, iPosy, dirx, diry);
+			}
+			else if (ID == 1)
+			{
+				bool allied = false;
+				activateShield(allied);
+			}
+		}
+
+		sf::Vector2f movement(0.0f, 0.0f);
+		sf::Vector2i mousePos = sf::Mouse::getPosition(m_window);
+
+		/*if (m_player->isMoving(m_player->UP))
+			movement.y -= m_player->getSpeed();
+
+		if (m_player->isMoving(m_player->DOWN))
+			movement.y += m_player->getSpeed();
+
+		if (m_player->isMoving(m_player->LEFT))
+			movement.x -= m_player->getSpeed();
+
+		if (m_player->isMoving(m_player->RIGHT))
+			movement.x += m_player->getSpeed();*/
+
+		float y = (float)mousePos.y - m_player->getWorldPosition().y;
+		float x = (float)mousePos.x - m_player->getWorldPosition().x;
+
+		float a = atan2(y, x);
+
+
+		//m_player->move(deltaTime.asSeconds());
+		//m_opponent->move(deltaTime.asSeconds());
+		m_crossH->setAngle(a*PI);
 		if ((m_clock.getElapsedTime() - m_savedTime).asSeconds() > 2.0)
 		{
 			m_infoHead = m_auxString = "";

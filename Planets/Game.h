@@ -12,7 +12,7 @@
 #include "Shot.h"
 #include "Shield.h"
 
-const unsigned short PORT = 5000;
+const unsigned short PORT = 53000;
 
 class Game
 {
@@ -59,6 +59,8 @@ private:
 	sf::IpAddress local_ip;
 	sf::TcpSocket m_socket;
 	sf::Time m_savedTime;
+	sf::TcpListener m_listener;
+	sf::Socket::Status m_sockStat;
 
 	bool m_connected = false;
 
