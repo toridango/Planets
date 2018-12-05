@@ -91,6 +91,12 @@ void Planet::setOrbitRadius(float r)
 	setPosition(x, y);
 }
 
+// Latency in milliseconds, must divide to get seconds
+void Planet::synchAngle(float a, sf::Int32 deltatime)
+{
+	setAngle(a + ((float)deltatime/1000) * m_angularSpeed);
+}
+
 void Planet::setAngle(float a)
 {
 	m_angle = a;
@@ -98,6 +104,11 @@ void Planet::setAngle(float a)
 	float y = m_orbitRadius * sin(a / PI);
 
 	setPosition(x, y);
+}
+
+float Planet::getAngle() const
+{
+	return m_angle;
 }
 
 bool Planet::collision(sf::Vector2f pos)

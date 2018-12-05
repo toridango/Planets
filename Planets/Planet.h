@@ -21,7 +21,9 @@ public:
 	explicit Planet(Planets::Type type, TextureHolder& textures);
 	virtual void drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const;
 	void setOrbitRadius(float r);
+	void synchAngle(float a, sf::Int32 deltatime);
 	void setAngle(float a);
+	float getAngle() const;
 	Textures::ID toTextureID(Planets::Type type);
 	void updateCurrent(sf::Time dt) override;
 	//void move(float dt);

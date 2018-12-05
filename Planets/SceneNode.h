@@ -28,6 +28,8 @@ public:
 	static std::map<std::string, sf::FloatRect> worldSizes;
 	static int playerScore;
 	static int oppoScore;
+	static int playerHits;
+	static int oppoHits;
 	static bool playerShield;
 	static bool oppoShield;
 	// Stop forgetting to add the definitions in the cpp when you add new statics

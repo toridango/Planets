@@ -32,6 +32,13 @@ bool Shot::getAllied()
 }
 
 
+void Shot::setRealPos(sf::Vector2f realPos)
+{
+	m_realPos = realPos;
+	m_needsCatchUp = m_waitOnce = true;
+}
+
+
 void Shot::drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	/*sf::FloatRect b = m_sprite.getGlobalBounds();
@@ -62,25 +69,53 @@ void Shot::drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const
 	target.draw(m_sprite, states);
 }
 
+void Shot::sendNotice(int hit)
+{
+	if (hit > 0)
+	{
+		SceneNode::playerHits += hit;
+	}
+	else if (hit < 0)
+	{
+		SceneNode::oppoHits -= hit;
+	}
+
+}
 
 
 void Shot::updateCurrent(sf::Time dt)
 {
 	float deltatime = dt.asSeconds();
-	float x = m_position.x += VELMOD * deltatime * m_velocity.x;
-	float y = m_position.y += VELMOD * deltatime * m_velocity.y;
 
-	setPosition(x, y);
+	/*float x = m_position.x += VELMOD * deltatime * m_velocity.x;
+	float y = m_position.y += VELMOD * deltatime * m_velocity.y;*/
+	m_position += (float)VELMOD * deltatime * m_velocity;
 
-	sf::FloatRect boundingRect = getWorldTransform().transformRect(m_sprite.getGlobalBounds());
+
+	if (m_needsCatchUp && !m_waitOnce)
+	{
+		m_realPos += (float)VELMOD * deltatime * m_velocity;
+		sf::Vector2f catchUp = m_realPos - m_position;
+
+		m_position += catchUp / 2.0f;
+	}
+	else if (m_needsCatchUp && m_waitOnce)
+	{
+		m_waitOnce = false;
+	}
+
+
+	setPosition(m_position.x, m_position.y);
+
+	/*sf::FloatRect boundingRect = getWorldTransform().transformRect(m_sprite.getGlobalBounds());
 	sf::FloatRect sunBRect = getWorldTransform().transformRect(worldSizes["sun"]);
-	sf::FloatRect oppoBRect = getWorldTransform().transformRect(worldSizes["opponent"]);
+	sf::FloatRect oppoBRect = getWorldTransform().transformRect(worldSizes["opponent"]);*/
 
-	float sunRadius = 0.85*(worldSizes["sun"].height) / 2.0;
+	/*float sunRadius = 0.85*(worldSizes["sun"].height) / 2.0;
 	float planetRadius = 0.85*(worldSizes["player"].height) / 2.0;
 	sf::Vector2f absSunPos = SceneNode::worldMap["sun"] - getWorldPosition();
 	sf::Vector2f absPlayerPos = SceneNode::worldMap["player"] - getWorldPosition();
-	sf::Vector2f absOpponentPos = SceneNode::worldMap["opponent"] - getWorldPosition();
+	sf::Vector2f absOpponentPos = SceneNode::worldMap["opponent"] - getWorldPosition();*/
 
 	if (outOfBounds(getWorldPosition()))
 	{
@@ -89,7 +124,7 @@ void Shot::updateCurrent(sf::Time dt)
 	//else if (boundingRect.intersects(sunBRect))
 	//else if (m_sprite.getGlobalBounds().intersects(worldSizes["sun"]))
 	else if (SceneNode::sunCollision(getWorldPosition()))
-	//else if (sqrt(pow(absSunPos.x, 2) + pow(absSunPos.y, 2)) <= sunRadius)
+		//else if (sqrt(pow(absSunPos.x, 2) + pow(absSunPos.y, 2)) <= sunRadius)
 	{
 		setMarkedForRemoval(true);
 	}
@@ -97,12 +132,26 @@ void Shot::updateCurrent(sf::Time dt)
 	//else if (m_sprite.getGlobalBounds().intersects(worldSizes["opponent"]))
 	else if (SceneNode::oppoCollision(getWorldPosition()))
 	{
-		if(!SceneNode::oppoShield) SceneNode::playerScore++;
+		if (!SceneNode::oppoShield)
+		{
+			if (m_allied)
+			{
+				SceneNode::playerScore++;
+				sendNotice(-1);
+			}
+		}
 		setMarkedForRemoval(true);
 	}
 	else if (SceneNode::playerCollision(getWorldPosition()))
 	{
-		if (!SceneNode::playerShield) SceneNode::oppoScore++;
+		if (!SceneNode::playerShield)
+		{
+			if (m_allied)
+			{
+				SceneNode::oppoScore++;
+				sendNotice(1);
+			}
+		}
 		setMarkedForRemoval(true);
 	}
 

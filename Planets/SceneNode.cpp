@@ -5,6 +5,8 @@ std::map<std::string, sf::Vector2f> SceneNode::worldMap;
 std::map<std::string, sf::FloatRect> SceneNode::worldSizes;
 int SceneNode::playerScore = 0;
 int SceneNode::oppoScore = 0;
+int SceneNode::playerHits = 0;
+int SceneNode::oppoHits = 0;
 bool SceneNode::playerShield = false;
 bool SceneNode::oppoShield = false;
 

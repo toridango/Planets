@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SFML/Network.hpp>
+
 #include "Entity.h"
 
 constexpr auto VELMOD = 200.0;
@@ -12,16 +14,21 @@ public:
 	virtual void drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const;
 	void updateCurrent(sf::Time dt) override;
 	bool getAllied();
+	void setRealPos(sf::Vector2f realPos);
 
 private:
-	bool sunCollision();
-	bool oppoCollision();
+	void sendNotice(int hit);
+	/*bool sunCollision();
+	bool oppoCollision();*/
 
 private:
 	sf::Sprite m_sprite;
 	sf::Vector2f m_size;
 	sf::Vector2f m_position;
+	sf::Vector2f m_realPos;
 	sf::Vector2f m_velocity;
 	bool m_allied;
+	bool m_needsCatchUp = false;
+	bool m_waitOnce = false;
 
 };

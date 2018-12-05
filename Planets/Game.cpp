@@ -11,6 +11,7 @@ Game::Game()
 	, m_info()
 	, m_pScore()
 	, m_oScore()
+	, m_latencyInfo()
 	, m_clock()
 {
 	if (!m_font.loadFromFile("../Planets/Media/Fonts/bahnschrift.ttf"))
@@ -27,6 +28,10 @@ Game::Game()
 	m_oScore.setFillColor(sf::Color(255, 255, 255, 255));
 	m_oScore.setFont(m_font);
 	m_oScore.setPosition(11.0f * WIN_WIDTH / 15.0f, WIN_HEIGHT / 10.0f);
+	
+	m_latencyInfo.setFillColor(sf::Color(255, 255, 255, 255));
+	m_latencyInfo.setFont(m_font);
+	m_latencyInfo.setPosition(WIN_WIDTH / 15.0f, 9.0f * WIN_HEIGHT / 10.0f);
 
 	//m_info.setPosition(650.0, 150.0);
 	m_info.setPosition(WIN_WIDTH / 3.0f, WIN_HEIGHT / 10.0f);
@@ -51,15 +56,8 @@ Game::Game()
 		m_auxString = local_ip.toString() + "\n" + public_ip.toString();
 		m_info.setString(m_infoHead + m_auxString);
 		render();
-
-		m_socket.setBlocking(false);
-		sf::TcpListener listener;
-		listener.listen(PORT);
-		listener.accept(m_socket);
-		m_infoHead = "Opponent found:\n";
-		m_auxString = m_socket.getRemoteAddress().toString();
-		sf::Time savedTime = m_clock.getElapsedTime();
-		m_connected = true;
+		m_listener.setBlocking(false);
+		m_listener.listen(PORT);
 	}
 	else
 	{
@@ -196,7 +194,7 @@ void Game::handleTextEntered(sf::Event e)
 			bool pass = std::regex_match(m_auxString, ipv4_regex);
 			if (pass)
 			{
-				if (m_socket.connect(m_auxString, PORT, sf::Time(sf::milliseconds(2000))) == sf::Socket::Done)
+				if (m_socket.connect(m_auxString, PORT, sf::Time(sf::milliseconds(5000))) == sf::Socket::Done)
 				{
 					m_infoHead = "Connected!";
 					m_connected = true;
@@ -221,7 +219,15 @@ void Game::handleTextEntered(sf::Event e)
 void Game::addShot(sf::Vector2f iPos, sf::Vector2f dir, bool allied)
 {
 	std::unique_ptr<Shot> newshot(new Shot(m_textures, iPos, dir, allied));
-	m_shots.push_back(newshot.get()); // TO-Do use this vector of pointers for the collisions
+	//m_shots.push_back(newshot.get()); // TO-Do use this vector of pointers for the collisions // No need, made them work properly
+	m_sceneGraph.attachChild(std::move(newshot));
+}
+
+void Game::addShot(sf::Vector2f iPos, sf::Vector2f dir, bool allied, sf::Vector2f realPos)
+{
+	std::unique_ptr<Shot> newshot(new Shot(m_textures, iPos, dir, allied));
+	newshot->setRealPos(realPos);
+	//m_shots.push_back(newshot.get()); // TO-Do use this vector of pointers for the collisions // No need, made them work properly
 	m_sceneGraph.attachChild(std::move(newshot));
 }
 
@@ -235,26 +241,39 @@ void Game::spawnShot(sf::Vector2i mousePos)
 	sf::Vector2f dir(x / mod, y / mod);
 	sf::Vector2f iPos(spawnPos.x, spawnPos.y);
 	sf::Int32 ID = 0;
-	float elapsed = m_clock.getElapsedTime().asSeconds();
+	//float elapsed = m_clock.getElapsedTime().asSeconds();
+	sf::Int32 ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
 
 	sf::Packet packetSend;
-	packetSend << ID << iPos.x << iPos.y << dir.x << dir.y << elapsed;
+	packetSend << ID << iPos.x << iPos.y << dir.x << dir.y << ms_local;
 	m_socket.send(packetSend);
 
 	addShot(iPos, dir, true);
 }
 
-void Game::incomingShot(float iPosx, float iPosy, float dirx, float diry, float elapsed)
+void Game::incomingShot(float iPosx, float iPosy, float dirx, float diry, sf::Int32 ms_remote)
 {
 	// Direction of shot
 	sf::Vector2f dir(dirx, diry);
 	sf::Vector2f iPos(iPosx, iPosy);
+	sf::Int32 ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
 
 	// Position prediction with latency into account
-	float dt = m_clock.getElapsedTime().asSeconds() - elapsed;
-	iPos += dt * dir;
+	// millisecond difference to second difference
+	sf::Int32 latency = ms_local - ms_remote;
+	float dt = ((float)(latency)) / 1000;
+	sf::Vector2f rPos = iPos + (float)VELMOD * dt * dir;
 
-	addShot(iPos, dir, false);
+	m_latencyInfo.setString(std::to_string(latency) + "ms");
+
+	if (latency > 120)
+	{
+		addShot(iPos, dir, false, rPos);
+	}
+	else
+		addShot(rPos, dir, false);
 }
 
 
@@ -276,7 +295,7 @@ void Game::processEvents()
 			m_window.close();
 			break;
 		case sf::Event::MouseButtonPressed:
-			if (m_connected)
+			if (m_connected && m_synched)
 			{
 				if (event.mouseButton.button == sf::Mouse::Right)
 				{
@@ -296,6 +315,7 @@ void Game::processEvents()
 		}
 	}
 }
+
 
 void Game::activateShield(bool allied)
 {
@@ -318,6 +338,27 @@ void Game::activateShield(bool allied)
 }
 
 
+void Game::checkForOpponent()
+{
+	if (m_listener.accept(m_socket) == sf::Socket::Done)
+	{
+		m_infoHead = "Opponent found:\n";
+		m_auxString = m_socket.getRemoteAddress().toString();
+		sf::Time savedTime = m_clock.getElapsedTime();
+		m_connected = true;
+		m_socket.setBlocking(false);
+	}
+}
+
+
+// Latency in milliseconds
+void Game::synchWithHost(sf::Int32 latency, float playerAngPos, float oppoAngPos)
+{
+	m_player->synchAngle(playerAngPos, latency);
+	m_opponent->synchAngle(oppoAngPos, latency);
+}
+
+
 
 void Game::updateWorldMap(std::string key, sf::Vector2f value)
 {
@@ -326,40 +367,85 @@ void Game::updateWorldMap(std::string key, sf::Vector2f value)
 		it->second = value;
 }
 
+void Game::sendPendingNotices()
+{
+	if (SceneNode::playerHits != 0 || SceneNode::oppoHits != 0)
+	{
+		sf::Packet packetSend;
+		sf::Int32 ID = 3;
+		packetSend << ID << SceneNode::playerHits << SceneNode::oppoHits;
+		SceneNode::playerHits = 0;
+		SceneNode::oppoHits = 0;
+		m_socket.send(packetSend);
+	}
+}
+
+
+void Game::handlePacket(sf::Packet packet)
+{
+	sf::Int32 ID, ms_remote;
+	float iPosx, iPosy, dirx, diry;
+	int theirSelfHits, theirHitsOnMe;
+	packet >> ID;
+	switch (ID)
+	{
+	case (0): // Shot
+	{
+		packet >> iPosx >> iPosy >> dirx >> diry >> ms_remote;
+		incomingShot(iPosx, iPosy, dirx, diry, ms_remote);
+		break;
+	}
+	case (1): // Shield
+	{
+		packet >> iPosx >> iPosy >> dirx >> diry >> ms_remote;
+		bool allied = false;
+		activateShield(allied);
+		break;
+	}
+	case (3): // Hit Notice
+	{
+		packet >> theirSelfHits >> theirHitsOnMe;
+		SceneNode::playerScore += theirSelfHits;
+		SceneNode::oppoScore += theirHitsOnMe;
+		break;
+	}
+	case (2): // Initial synch, shouldnt happen here
+	default:
+		break;
+	}
+}
+
+
 void Game::update(sf::Time deltaTime)
 {
 	m_info.setString(m_infoHead + m_auxString);
 
-	if (m_connected)
+	sf::Vector2i mousePos = sf::Mouse::getPosition(m_window);
+	float y = (float)mousePos.y - m_player->getWorldPosition().y;
+	float x = (float)mousePos.x - m_player->getWorldPosition().x;
+	float a = atan2(y, x);
+
+	m_sceneGraph.update(deltaTime);
+	updateWorldMap("player", m_player->getWorldPosition());
+	updateWorldMap("opponent", m_opponent->getWorldPosition());
+	m_sceneGraph.removeWrecks();
+	m_crossH->setAngle(a*PI);
+
+	if (m_connected && m_synched)
 	{
 
 		m_pScore.setString("Player Score:\n" + std::to_string(SceneNode::playerScore));
 		m_oScore.setString("Opponent Score:\n" + std::to_string(SceneNode::oppoScore));
 
 		sf::Packet packetReceive;
-		sf::Socket::Status stat = m_socket.receive(packetReceive);
-
-		// TO-DO: if not allied, check timestamp and predict starting position
-
-		sf::Int32 ID;
-		float iPosx, iPosy, dirx, diry, elapsed;
-		if (stat == sf::Socket::Status::Done)
+		if (m_socket.receive(packetReceive) == sf::Socket::Status::Done)
 		{
-			packetReceive >> ID >> iPosx >> iPosy >> dirx >> diry >> elapsed;
-			if (ID == 0)
-			{
-				incomingShot(iPosx, iPosy, dirx, diry, elapsed);
-			}
-			else if (ID == 1)
-			{
-				bool allied = false;
-				activateShield(allied);
-			}
+			handlePacket(packetReceive);
 		}
 
-		sf::Vector2f movement(0.0f, 0.0f);
-		sf::Vector2i mousePos = sf::Mouse::getPosition(m_window);
+		sendPendingNotices();
 
+		sf::Vector2f movement(0.0f, 0.0f);
 		/*if (m_player->isMoving(m_player->UP))
 			movement.y -= m_player->getSpeed();
 
@@ -372,31 +458,55 @@ void Game::update(sf::Time deltaTime)
 		if (m_player->isMoving(m_player->RIGHT))
 			movement.x += m_player->getSpeed();*/
 
-		float y = (float)mousePos.y - m_player->getWorldPosition().y;
-		float x = (float)mousePos.x - m_player->getWorldPosition().x;
 
-		float a = atan2(y, x);
+			//m_player->move(deltaTime.asSeconds());
+			//m_opponent->move(deltaTime.asSeconds());
 
-
-		//m_player->move(deltaTime.asSeconds());
-		//m_opponent->move(deltaTime.asSeconds());
-
-		m_crossH->setAngle(a*PI);
-		// Warning: This will delete the strings every update if they're ever used for something else
+			// Warning: This will delete the strings every update if they're ever used for something else
 		if ((m_clock.getElapsedTime() - m_savedTime).asSeconds() > 2.0)
 		{
 			m_infoHead = m_auxString = "";
 		}
 
-		m_sceneGraph.update(deltaTime);
-		updateWorldMap("player", m_player->getWorldPosition());
-		updateWorldMap("opponent", m_opponent->getWorldPosition());
-		m_sceneGraph.removeWrecks();
 	}
+	else
+	{
+		if (!m_connected)
+		{
+			if (type == BTYPE::BHOST) checkForOpponent();
+		}
+		if (m_connected && !m_synched)
+		{
+			if (type == BTYPE::BHOST)
+			{
+				sf::Int32 ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+				sf::Packet packetSend;
+				sf::Int32 ID = 2;
+				packetSend << ID << m_player->getAngle() << m_opponent->getAngle() << ms_local;
+				m_socket.send(packetSend);
+				m_synched = true;
+			}
+			else if (type == BTYPE::BJOIN)
+			{
 
-	//m_auxString = std::to_string(m_sceneGraph.getChildrenCount());
+				sf::Int32 ID, ms_remote, ms_local;
+				sf::Packet packetSynch;
+				float playerAngPos, oppoAngPos;
+				if (m_socket.receive(packetSynch) == sf::Socket::Status::Done)
+				{
+					packetSynch >> ID >> oppoAngPos >> playerAngPos >> ms_remote;
+					ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+					sf::Int32 latency = ms_local - ms_remote;
+					synchWithHost(latency, playerAngPos, oppoAngPos);
+					m_synched = true;
+				}
+
+			}
+		}
+
+		//m_auxString = std::to_string(m_sceneGraph.getChildrenCount());
+	}
 }
-
 void Game::render()
 {
 
@@ -406,6 +516,7 @@ void Game::render()
 	m_window.draw(m_info);
 	m_window.draw(m_pScore);
 	m_window.draw(m_oScore);
+	m_window.draw(m_latencyInfo);
 	m_window.display();
 }
 
