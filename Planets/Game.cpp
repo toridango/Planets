@@ -9,6 +9,8 @@ Game::Game()
 	, m_sceneGraph()
 	, m_font()
 	, m_info()
+	, m_pScore()
+	, m_oScore()
 	, m_clock()
 {
 	if (!m_font.loadFromFile("../Planets/Media/Fonts/bahnschrift.ttf"))
@@ -18,24 +20,35 @@ Game::Game()
 	m_info.setFont(m_font);
 	m_info.setFillColor(sf::Color(255, 255, 255, 255));
 	m_info.setString("");
+
+	m_pScore.setFillColor(sf::Color(255, 255, 255, 255));
+	m_pScore.setFont(m_font);
+	m_pScore.setPosition(WIN_WIDTH / 15.0f, WIN_HEIGHT / 10.0f);
+	m_oScore.setFillColor(sf::Color(255, 255, 255, 255));
+	m_oScore.setFont(m_font);
+	m_oScore.setPosition(11.0f * WIN_WIDTH / 15.0f, WIN_HEIGHT / 10.0f);
+
 	//m_info.setPosition(650.0, 150.0);
+	m_info.setPosition(WIN_WIDTH / 3.0f, WIN_HEIGHT / 10.0f);
 	local_ip = sf::IpAddress::getLocalAddress();
+	public_ip = sf::IpAddress::getPublicAddress();
 
 	ipv4_regex = std::regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.)?){4}$");
 
 	type = Button::getLastButton();
+
 
 	loadTextures();
 	buildScene();
 	m_infoHead = "";
 
 
-	m_info.setPosition(WIN_WIDTH / 3.0f, WIN_HEIGHT / 10.0f);
+	//m_info.setPosition(WIN_WIDTH / 3.0f, WIN_HEIGHT / 10.0f);
 	m_auxString = "";
 	if (type == BTYPE::BHOST)
 	{
-		m_infoHead = "Waiting for opponent to join...\nYour Ip address: ";
-		m_auxString = local_ip.toString();
+		m_infoHead = "Waiting for opponent to join...\nYour Local and Public Ip addresses:\n";
+		m_auxString = local_ip.toString() + "\n" + public_ip.toString();
 		m_info.setString(m_infoHead + m_auxString);
 		render();
 
@@ -81,7 +94,7 @@ void Game::buildScene()
 {
 
 
-	sf::Texture& texture = m_textures.get(Textures::SUN);
+	//sf::Texture& texture = m_textures.get(Textures::SUN);
 	/*insideOrbitRadius = 250.f;
 	outsideOrbitRadius = 450.f;*/
 	insideOrbitRadius = 0.666 * 250.f;
@@ -315,11 +328,14 @@ void Game::updateWorldMap(std::string key, sf::Vector2f value)
 
 void Game::update(sf::Time deltaTime)
 {
-
 	m_info.setString(m_infoHead + m_auxString);
 
 	if (m_connected)
 	{
+
+		m_pScore.setString("Player Score:\n" + std::to_string(SceneNode::playerScore));
+		m_oScore.setString("Opponent Score:\n" + std::to_string(SceneNode::oppoScore));
+
 		sf::Packet packetReceive;
 		sf::Socket::Status stat = m_socket.receive(packetReceive);
 
@@ -364,7 +380,9 @@ void Game::update(sf::Time deltaTime)
 
 		//m_player->move(deltaTime.asSeconds());
 		//m_opponent->move(deltaTime.asSeconds());
+
 		m_crossH->setAngle(a*PI);
+		// Warning: This will delete the strings every update if they're ever used for something else
 		if ((m_clock.getElapsedTime() - m_savedTime).asSeconds() > 2.0)
 		{
 			m_infoHead = m_auxString = "";
@@ -386,6 +404,8 @@ void Game::render()
 	//m_window.draw(m_player.getSprite());
 	m_window.draw(m_sceneGraph);
 	m_window.draw(m_info);
+	m_window.draw(m_pScore);
+	m_window.draw(m_oScore);
 	m_window.display();
 }
 

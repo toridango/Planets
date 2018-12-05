@@ -1,8 +1,12 @@
 
 #include "SceneNode.h"
+
 std::map<std::string, sf::Vector2f> SceneNode::worldMap;
 std::map<std::string, sf::FloatRect> SceneNode::worldSizes;
-
+int SceneNode::playerScore = 0;
+int SceneNode::oppoScore = 0;
+bool SceneNode::playerShield = false;
+bool SceneNode::oppoShield = false;
 
 
 SceneNode::SceneNode()

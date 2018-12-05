@@ -54,9 +54,12 @@ private:
 	sf::Clock m_clock;
 	sf::Font m_font;
 	sf::Text m_info;
+	sf::Text m_pScore;
+	sf::Text m_oScore;
 	std::string m_auxString;
 	std::string m_infoHead;
 	sf::IpAddress local_ip;
+	sf::IpAddress public_ip;
 	sf::TcpSocket m_socket;
 	sf::Time m_savedTime;
 	sf::TcpListener m_listener;

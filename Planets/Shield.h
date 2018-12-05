@@ -20,8 +20,12 @@ public:
 	bool collision(sf::Vector2f pos);*/
 
 private:
+	void tellRootAboutShields(bool active);
+
+private:
 	enum STATE{OFF, ON, CD};
 	bool m_active;
+	bool m_allied;
 	STATE m_state;
 	sf::Clock m_clock;
 

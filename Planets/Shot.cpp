@@ -50,6 +50,7 @@ void Shot::drawCurrent(sf::RenderTarget& target, sf::RenderStates states) const
 	shape.setPosition(sf::Vector2f(absSunPos.x - radius, absSunPos.y - radius));
 	shape.setFillColor(sf::Color(100, 250, 50));
 	target.draw(shape, states);*/
+
 	/*sf::CircleShape shape(10.0);
 	shape.setPosition(getWorldPosition());
 	shape.setFillColor(sf::Color(100, 250, 50));
@@ -96,10 +97,12 @@ void Shot::updateCurrent(sf::Time dt)
 	//else if (m_sprite.getGlobalBounds().intersects(worldSizes["opponent"]))
 	else if (SceneNode::oppoCollision(getWorldPosition()))
 	{
+		if(!SceneNode::oppoShield) SceneNode::playerScore++;
 		setMarkedForRemoval(true);
 	}
 	else if (SceneNode::playerCollision(getWorldPosition()))
 	{
+		if (!SceneNode::playerShield) SceneNode::oppoScore++;
 		setMarkedForRemoval(true);
 	}
 

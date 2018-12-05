@@ -16,10 +16,18 @@ Shield::Shield(TextureHolder& textures, bool allied)
 	sf::FloatRect bounds = m_sprite.getLocalBounds();
 	m_sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
 
+	m_allied = allied;
 	m_active = false;
 	m_state = OFF;
 }
 
+void Shield::tellRootAboutShields(bool active)
+{
+	if (m_allied)
+		SceneNode::playerShield = active;
+	else
+		SceneNode::oppoShield = active;
+}
 
 void Shield::setActive(bool active)
 {
@@ -28,9 +36,13 @@ void Shield::setActive(bool active)
 		m_clock.restart();
 		m_state = ON;
 		m_active = active;
+		tellRootAboutShields(active);
 	}
 	else if (!active)
-		m_active = active; 
+	{
+		m_active = active;
+		tellRootAboutShields(active);
+	}
 }
 bool Shield::getActive() const { return m_active; }
 
@@ -55,6 +67,7 @@ void Shield::updateCurrent(sf::Time dt)
 		if (m_clock.getElapsedTime().asSeconds() > DURATION)
 		{
 			m_active = false;
+			tellRootAboutShields(m_active);
 			m_state = CD;
 		}
 		break;
