@@ -35,11 +35,13 @@ private:
 	void spawnShot(sf::Vector2i mousePos);
 	void incomingShot(float iPosx, float iPosy, float dirx, float diry, sf::Int32 ms_remote);
 	void updateWorldMap(std::string key, sf::Vector2f);
-	void activateShield(bool allied);
+	void activateShield(bool allied, float angle);
 	void checkForOpponent();
-	void synchWithHost(sf::Int32 latency, float playerAngPos, float oppoAngPos);
+	void synchWithHost(long latency, float playerAngPos, float oppoAngPos);
 	void handlePacket(sf::Packet packet);
 	void sendPendingNotices();
+	void setLatencyString(long latency);
+	void updateLatencyString(long ms_remote);
 
 private:
 	sf::RenderWindow m_window;
@@ -47,6 +49,8 @@ private:
 	Sun* m_sun;
 	float insideOrbitRadius;
 	float outsideOrbitRadius;
+	float crosshairsRadius;
+	float shieldRadius;
 	Player* m_player;
 	Planet* m_opponent;
 	Planet* m_crossH;

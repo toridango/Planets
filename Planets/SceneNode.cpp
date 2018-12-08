@@ -9,6 +9,8 @@ int SceneNode::playerHits = 0;
 int SceneNode::oppoHits = 0;
 bool SceneNode::playerShield = false;
 bool SceneNode::oppoShield = false;
+float SceneNode::playerShieldAngle;
+float SceneNode::oppoShieldAngle;
 
 
 SceneNode::SceneNode()

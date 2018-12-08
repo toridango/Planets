@@ -82,6 +82,28 @@ void Shot::sendNotice(int hit)
 
 }
 
+bool Shot::compareAngleWithShield(bool player)
+{
+	sf::Vector2f planetPos;
+	float angle;
+	if (player)
+	{
+		planetPos = SceneNode::worldMap["player"];// -getWorldPosition();
+		angle = SceneNode::playerShieldAngle;
+	}
+	else
+	{
+		planetPos = SceneNode::worldMap["opponent"];// -getWorldPosition();
+		angle = SceneNode::oppoShieldAngle;
+	}
+	float y = m_position.y - planetPos.y;
+	float x = m_position.x - planetPos.x;
+	float a = atan2(y, x) * (180 / PI);
+
+	return ((a < angle + SH_ANG_WIDTH / 2.0f) && (a > angle - SH_ANG_WIDTH / 2.0f));
+
+}
+
 
 void Shot::updateCurrent(sf::Time dt)
 {
@@ -132,7 +154,7 @@ void Shot::updateCurrent(sf::Time dt)
 	//else if (m_sprite.getGlobalBounds().intersects(worldSizes["opponent"]))
 	else if (SceneNode::oppoCollision(getWorldPosition()))
 	{
-		if (!SceneNode::oppoShield)
+		if (!(SceneNode::oppoShield && compareAngleWithShield(false)))
 		{
 			if (m_allied)
 			{
@@ -144,7 +166,7 @@ void Shot::updateCurrent(sf::Time dt)
 	}
 	else if (SceneNode::playerCollision(getWorldPosition()))
 	{
-		if (!SceneNode::playerShield)
+		if (!(SceneNode::playerShield && compareAngleWithShield(true)))
 		{
 			if (m_allied)
 			{

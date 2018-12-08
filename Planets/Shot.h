@@ -18,6 +18,7 @@ public:
 
 private:
 	void sendNotice(int hit);
+	bool compareAngleWithShield(bool player);
 	/*bool sunCollision();
 	bool oppoCollision();*/
 

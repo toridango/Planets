@@ -1,6 +1,15 @@
 #include "Planet.h"
 
+Planet::Planet()
+{
+	float sizeX = 50.0f;
+	float sizeY = 50.0f;
+	//m_size = sf::Vector2f(50.0, 50.0);
+	m_size = sf::Vector2f(0.666 * sizeX, 0.666 * sizeY);
 
+	m_angle = 0.0f;
+
+}
 
 Planet::Planet(Planets::Type type, TextureHolder& textures)
 	: m_sprite(textures.get(toTextureID(type)))
@@ -92,7 +101,7 @@ void Planet::setOrbitRadius(float r)
 }
 
 // Latency in milliseconds, must divide to get seconds
-void Planet::synchAngle(float a, sf::Int32 deltatime)
+void Planet::synchAngle(float a, long deltatime)
 {
 	setAngle(a + ((float)deltatime/1000) * m_angularSpeed);
 }

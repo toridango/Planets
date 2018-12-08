@@ -14,6 +14,7 @@
 
 constexpr auto WIN_WIDTH = (int)(2.0 / 3.0 * 1580);
 constexpr auto WIN_HEIGHT = (int)(2.0 / 3.0 * 1000);
+constexpr auto SH_ANG_WIDTH = 90.0f;
 
 class SceneNode
 	: public sf::Transformable
@@ -32,6 +33,8 @@ public:
 	static int oppoHits;
 	static bool playerShield;
 	static bool oppoShield;
+	static float playerShieldAngle;
+	static float oppoShieldAngle;
 	// Stop forgetting to add the definitions in the cpp when you add new statics
 
 public:

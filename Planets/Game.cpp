@@ -28,7 +28,7 @@ Game::Game()
 	m_oScore.setFillColor(sf::Color(255, 255, 255, 255));
 	m_oScore.setFont(m_font);
 	m_oScore.setPosition(11.0f * WIN_WIDTH / 15.0f, WIN_HEIGHT / 10.0f);
-	
+
 	m_latencyInfo.setFillColor(sf::Color(255, 255, 255, 255));
 	m_latencyInfo.setFont(m_font);
 	m_latencyInfo.setPosition(WIN_WIDTH / 15.0f, 9.0f * WIN_HEIGHT / 10.0f);
@@ -82,8 +82,8 @@ void Game::loadTextures()
 	m_textures.load(Textures::CROSSHAIRS, "Media/Textures/crosshairs.png");
 	m_textures.load(Textures::LASERPLAYER, "Media/Textures/beam_player.png");
 	m_textures.load(Textures::LASEROPPO, "Media/Textures/beam_opponent.png");
-	m_textures.load(Textures::SHIELDPLAYER, "Media/Textures/shield_player.png");
-	m_textures.load(Textures::SHIELDOPPO, "Media/Textures/shield_opponent.png");
+	m_textures.load(Textures::SHIELDPLAYER, "Media/Textures/dirshield_player.png");
+	m_textures.load(Textures::SHIELDOPPO, "Media/Textures/dirshield_opponent.png");
 
 
 }
@@ -97,6 +97,8 @@ void Game::buildScene()
 	outsideOrbitRadius = 450.f;*/
 	insideOrbitRadius = 0.666 * 250.f;
 	outsideOrbitRadius = 0.666 * 450.f;
+	crosshairsRadius = 50.0f;
+	shieldRadius = 20.0f;
 	float playerRadius;
 	float oppoRadius;
 
@@ -134,12 +136,15 @@ void Game::buildScene()
 	std::unique_ptr<Planet> crosshairs(new Planet(Planets::Crosshairs, m_textures));
 	m_crossH = crosshairs.get();
 	// Pos with respect to parent (player)
-	m_crossH->setOrbitRadius(50.0);
+	m_crossH->setOrbitRadius(crosshairsRadius);
 	m_player->attachChild(std::move(crosshairs));
 
 	std::unique_ptr<Shield> allyShield(new Shield(m_textures, true));
 	m_allySh = allyShield.get();
+	m_allySh->setOrbitRadius(shieldRadius);
 	m_player->attachChild(std::move(allyShield));
+
+
 
 	std::unique_ptr<Planet> oppo(new Planet(Planets::Lava, m_textures));
 	m_opponent = oppo.get();
@@ -151,6 +156,7 @@ void Game::buildScene()
 
 	std::unique_ptr<Shield> enemyShield(new Shield(m_textures, false));
 	m_enemySh = enemyShield.get();
+	m_enemySh->setOrbitRadius(shieldRadius);
 	m_opponent->attachChild(std::move(enemyShield));
 
 
@@ -242,7 +248,7 @@ void Game::spawnShot(sf::Vector2i mousePos)
 	sf::Vector2f iPos(spawnPos.x, spawnPos.y);
 	sf::Int32 ID = 0;
 	//float elapsed = m_clock.getElapsedTime().asSeconds();
-	sf::Int32 ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	long ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 
 	sf::Packet packetSend;
@@ -257,16 +263,16 @@ void Game::incomingShot(float iPosx, float iPosy, float dirx, float diry, sf::In
 	// Direction of shot
 	sf::Vector2f dir(dirx, diry);
 	sf::Vector2f iPos(iPosx, iPosy);
-	sf::Int32 ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	long ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 
 	// Position prediction with latency into account
 	// millisecond difference to second difference
-	sf::Int32 latency = ms_local - ms_remote;
+	long latency = ms_local - ms_remote;
 	float dt = ((float)(latency)) / 1000;
 	sf::Vector2f rPos = iPos + (float)VELMOD * dt * dir;
 
-	m_latencyInfo.setString(std::to_string(latency) + "ms");
+	setLatencyString(latency);
 
 	if (latency > 120)
 	{
@@ -286,11 +292,33 @@ void Game::processEvents()
 		switch (event.type)
 		{
 		case sf::Event::KeyPressed:
-			m_player->handlePlayerInput(event.key.code, true);
+		{
+			if (m_allySh->getActive())
+			{
+				float angSpeed = m_allySh->handlePlayerInput(event.key.code, true);
+
+				long ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+				sf::Packet packetSend;
+				sf::Int32 ID = 4;
+				packetSend << ID << angSpeed << ms_local;
+				m_socket.send(packetSend);
+			}
 			break;
+		}
 		case sf::Event::KeyReleased:
-			m_player->handlePlayerInput(event.key.code, false);
+		{
+			if (m_allySh->getActive())
+			{
+				float angSpeed = m_allySh->handlePlayerInput(event.key.code, false);
+
+				long ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+				sf::Packet packetSend;
+				sf::Int32 ID = 4;
+				packetSend << ID << angSpeed << ms_local;
+				m_socket.send(packetSend);
+			}
 			break;
+		}
 		case sf::Event::Closed:
 			m_window.close();
 			break;
@@ -300,8 +328,14 @@ void Game::processEvents()
 				if (event.mouseButton.button == sf::Mouse::Right)
 				{
 					bool allied = true;
+					sf::Vector2i mousePos = sf::Mouse::getPosition(m_window);
+					float y = (float)mousePos.y - m_player->getWorldPosition().y;
+					float x = (float)mousePos.x - m_player->getWorldPosition().x;
+					float a = atan2(y, x) * (180 / PI);
+
 					// Mysterious black magicks: reaches this point but doesn't enter the function
-					activateShield(allied);
+					// Problem was compiler optimisations
+					activateShield(allied, a);
 				}
 				else if (event.mouseButton.button == sf::Mouse::Left)
 				{
@@ -317,23 +351,25 @@ void Game::processEvents()
 }
 
 
-void Game::activateShield(bool allied)
+void Game::activateShield(bool allied, float angle)
 {
 	// TO-DO offset time for enemy activation (elapsed time since timestamp)
 	// This implies a global clock class is needed
 	if (allied)
 	{
 		float elapsed = m_clock.getElapsedTime().asSeconds();
+		long ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
 		sf::Packet packetSend;
 		sf::Int32 ID = 1;
-		packetSend << ID << 0.0 << 0.0 << 0.0 << 0.0 << elapsed;
+		packetSend << ID << angle << ms_local;
 		m_socket.send(packetSend);
 
-		m_allySh->setActive(true);
+		m_allySh->setActive(true, angle);
 	}
 	else if (!allied)
 	{
-		m_enemySh->setActive(true);
+		m_enemySh->setActive(true, angle);
 	}
 }
 
@@ -352,7 +388,7 @@ void Game::checkForOpponent()
 
 
 // Latency in milliseconds
-void Game::synchWithHost(sf::Int32 latency, float playerAngPos, float oppoAngPos)
+void Game::synchWithHost(long latency, float playerAngPos, float oppoAngPos)
 {
 	m_player->synchAngle(playerAngPos, latency);
 	m_opponent->synchAngle(oppoAngPos, latency);
@@ -380,11 +416,24 @@ void Game::sendPendingNotices()
 	}
 }
 
+void Game::setLatencyString(long latency)
+{
+	m_latencyInfo.setString(std::to_string(latency) + "ms");
+}
+
+void Game::updateLatencyString(long ms_remote)
+{
+	long ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	long latency = ms_local - ms_remote;
+
+	setLatencyString(latency);
+}
 
 void Game::handlePacket(sf::Packet packet)
 {
 	sf::Int32 ID, ms_remote;
 	float iPosx, iPosy, dirx, diry;
+	float angle, angSpeed;
 	int theirSelfHits, theirHitsOnMe;
 	packet >> ID;
 	switch (ID)
@@ -397,9 +446,10 @@ void Game::handlePacket(sf::Packet packet)
 	}
 	case (1): // Shield
 	{
-		packet >> iPosx >> iPosy >> dirx >> diry >> ms_remote;
+		packet >> angle >> ms_remote;
 		bool allied = false;
-		activateShield(allied);
+		activateShield(allied, angle);
+		updateLatencyString(ms_remote);
 		break;
 	}
 	case (3): // Hit Notice
@@ -407,6 +457,18 @@ void Game::handlePacket(sf::Packet packet)
 		packet >> theirSelfHits >> theirHitsOnMe;
 		SceneNode::playerScore += theirSelfHits;
 		SceneNode::oppoScore += theirHitsOnMe;
+		break;
+	}
+	case (4): // Shield direction change
+	{
+		packet >> angSpeed >> ms_remote;
+		bool allied = false;
+
+		long ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		long latency = ms_local - ms_remote;
+
+		m_enemySh->synchAngularSpeed(angSpeed, latency);
+		setLatencyString(latency);
 		break;
 	}
 	case (2): // Initial synch, shouldnt happen here
@@ -479,7 +541,7 @@ void Game::update(sf::Time deltaTime)
 		{
 			if (type == BTYPE::BHOST)
 			{
-				sf::Int32 ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+				long ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 				sf::Packet packetSend;
 				sf::Int32 ID = 2;
 				packetSend << ID << m_player->getAngle() << m_opponent->getAngle() << ms_local;
@@ -489,14 +551,15 @@ void Game::update(sf::Time deltaTime)
 			else if (type == BTYPE::BJOIN)
 			{
 
-				sf::Int32 ID, ms_remote, ms_local;
+				sf::Int32 ID;
+				int ms_remote, ms_local;
 				sf::Packet packetSynch;
 				float playerAngPos, oppoAngPos;
 				if (m_socket.receive(packetSynch) == sf::Socket::Status::Done)
 				{
 					packetSynch >> ID >> oppoAngPos >> playerAngPos >> ms_remote;
 					ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-					sf::Int32 latency = ms_local - ms_remote;
+					long latency = ms_local - ms_remote;
 					synchWithHost(latency, playerAngPos, oppoAngPos);
 					m_synched = true;
 				}
