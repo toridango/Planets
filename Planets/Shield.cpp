@@ -21,6 +21,7 @@ Shield::Shield(TextureHolder& textures, bool allied)
 	m_allied = allied;
 	m_active = false;
 	m_needsCatchUp = false;
+	m_newestTimeStamp = std::numeric_limits<long>::min();
 	m_state = OFF;
 }
 
@@ -61,7 +62,7 @@ void Shield::setActive(bool active, float angle)
 
 bool Shield::getActive() const { return m_active; }
 void Shield::setAngle(float angle) { m_angle = angle; }
-bool Shield::getAngle() const { return m_angle; }
+float Shield::getAngle() const { return m_angle; }
 void Shield::setAngularSpeed(float w) { m_angularSpeed = w; }
 bool Shield::getAngularSpeed() const { return m_angularSpeed; }
 float Shield::getAngularWidth() const { return m_angWidth; }
@@ -78,17 +79,22 @@ float Shield::handlePlayerInput(sf::Keyboard::Key key, bool isPressed)
 	return m_angularSpeed;
 }
 
-void Shield::synchAngularSpeed(float angSpeed, long latency)
+void Shield::synchAngularSpeed(float angSpeed, float angle, long ms_local, long ms_remote)
 {
-	m_angularSpeed = angSpeed;
-	// Position prediction with latency into account
-	float dt = ((float)(latency)) / 1000;
-	float rAngle = m_angle + (m_angularSpeed - angSpeed) * dt;
-
-	if (abs(rAngle - m_angle) > 1.0f)
+	if (ms_remote > m_newestTimeStamp)
 	{
-		m_realAngle = rAngle;
-		m_needsCatchUp = true;
+		m_newestTimeStamp = ms_remote;
+		m_angularSpeed = angSpeed;
+		// Position prediction with latency into account
+		float dt = ((float)(ms_local - ms_remote)) / 1000;
+		// float rAngle = m_angle + (m_angularSpeed - angSpeed) * dt;
+		float rAngle = angle + angSpeed * dt;
+
+		if (abs(rAngle - m_angle) > 1.0f)
+		{
+			m_realAngle = rAngle;
+			m_needsCatchUp = true;
+		}
 	}
 }
 

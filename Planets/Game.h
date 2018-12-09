@@ -42,6 +42,7 @@ private:
 	void sendPendingNotices();
 	void setLatencyString(long latency);
 	void updateLatencyString(long ms_remote);
+	void sendPacket(sf::Packet p);
 
 private:
 	sf::RenderWindow m_window;

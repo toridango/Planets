@@ -253,7 +253,8 @@ void Game::spawnShot(sf::Vector2i mousePos)
 
 	sf::Packet packetSend;
 	packetSend << ID << iPos.x << iPos.y << dir.x << dir.y << ms_local;
-	m_socket.send(packetSend);
+	//m_socket.send(packetSend);
+	sendPacket(packetSend);
 
 	addShot(iPos, dir, true);
 }
@@ -296,12 +297,14 @@ void Game::processEvents()
 			if (m_allySh->getActive())
 			{
 				float angSpeed = m_allySh->handlePlayerInput(event.key.code, true);
+				float angle = m_allySh->getAngle();
 
 				long ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 				sf::Packet packetSend;
 				sf::Int32 ID = 4;
-				packetSend << ID << angSpeed << ms_local;
-				m_socket.send(packetSend);
+				packetSend << ID << angSpeed << angle << ms_local;
+				//m_socket.send(packetSend);
+				sendPacket(packetSend);
 			}
 			break;
 		}
@@ -310,12 +313,14 @@ void Game::processEvents()
 			if (m_allySh->getActive())
 			{
 				float angSpeed = m_allySh->handlePlayerInput(event.key.code, false);
+				float angle = m_allySh->getAngle();
 
 				long ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 				sf::Packet packetSend;
 				sf::Int32 ID = 4;
-				packetSend << ID << angSpeed << ms_local;
-				m_socket.send(packetSend);
+				packetSend << ID << angSpeed << angle << ms_local;
+				//m_socket.send(packetSend);
+				sendPacket(packetSend);
 			}
 			break;
 		}
@@ -363,7 +368,8 @@ void Game::activateShield(bool allied, float angle)
 		sf::Packet packetSend;
 		sf::Int32 ID = 1;
 		packetSend << ID << angle << ms_local;
-		m_socket.send(packetSend);
+		//m_socket.send(packetSend);
+		sendPacket(packetSend);
 
 		m_allySh->setActive(true, angle);
 	}
@@ -403,6 +409,17 @@ void Game::updateWorldMap(std::string key, sf::Vector2f value)
 		it->second = value;
 }
 
+void Game::sendPacket(sf::Packet p)
+{
+	sf::Socket::Status s = m_socket.send(p);
+	int tries = 1;
+	while (s == sf::Socket::Error /*&& tries < 6*/)
+	{
+		s = m_socket.send(p);
+		++tries;
+	}
+}
+
 void Game::sendPendingNotices()
 {
 	if (SceneNode::playerHits != 0 || SceneNode::oppoHits != 0)
@@ -412,7 +429,8 @@ void Game::sendPendingNotices()
 		packetSend << ID << SceneNode::playerHits << SceneNode::oppoHits;
 		SceneNode::playerHits = 0;
 		SceneNode::oppoHits = 0;
-		m_socket.send(packetSend);
+		//m_socket.send(packetSend);
+		sendPacket(packetSend);
 	}
 }
 
@@ -461,13 +479,13 @@ void Game::handlePacket(sf::Packet packet)
 	}
 	case (4): // Shield direction change
 	{
-		packet >> angSpeed >> ms_remote;
+		packet >> angSpeed >> angle >> ms_remote;
 		bool allied = false;
 
 		long ms_local = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		long latency = ms_local - ms_remote;
 
-		m_enemySh->synchAngularSpeed(angSpeed, latency);
+		m_enemySh->synchAngularSpeed(angSpeed, angle, ms_local, ms_remote);
 		setLatencyString(latency);
 		break;
 	}
@@ -521,10 +539,10 @@ void Game::update(sf::Time deltaTime)
 			movement.x += m_player->getSpeed();*/
 
 
-			//m_player->move(deltaTime.asSeconds());
-			//m_opponent->move(deltaTime.asSeconds());
+		//m_player->move(deltaTime.asSeconds());
+		//m_opponent->move(deltaTime.asSeconds());
 
-			// Warning: This will delete the strings every update if they're ever used for something else
+		// Warning: This will delete the strings every update if they're ever used for something else
 		if ((m_clock.getElapsedTime() - m_savedTime).asSeconds() > 2.0)
 		{
 			m_infoHead = m_auxString = "";
@@ -545,7 +563,8 @@ void Game::update(sf::Time deltaTime)
 				sf::Packet packetSend;
 				sf::Int32 ID = 2;
 				packetSend << ID << m_player->getAngle() << m_opponent->getAngle() << ms_local;
-				m_socket.send(packetSend);
+				//m_socket.send(packetSend);
+				sendPacket(packetSend);
 				m_synched = true;
 			}
 			else if (type == BTYPE::BJOIN)
